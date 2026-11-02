@@ -1,0 +1,72 @@
+{
+  "name": "texas-holdem-game",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "No-limit Texas Hold'em tournaments in React + Vite + TypeScript — heads-up or 6-max sit & go against 15 original cartoon bots with their own styles, strengths and visible tells; animated SVG table in three themes, colour-blind-friendly four-colour or grey deck, full action log, autosave & resume, shared Zoltan’s Arcade stats. Part of Arcade-Game-Center.",
+  "license": "MIT",
+  "author": "Zoltán Dul",
+  "homepage": "https://github.com/ZoliQua/Texas-Holdem-Game#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZoliQua/Texas-Holdem-Game.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ZoliQua/Texas-Holdem-Game/issues"
+  },
+  "keywords": [
+    "poker",
+    "texas-holdem",
+    "no-limit-holdem",
+    "card-game",
+    "tournament",
+    "poker-ai",
+    "monte-carlo",
+    "colorblind-friendly",
+    "game",
+    "react",
+    "typescript",
+    "vite",
+    "arcade-game-center"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build",
+    "sim:strength": "vite-node scripts/sim-strength.ts",
+    "sim:calibrate": "vite-node scripts/calibrate-blinds.ts"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.15.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.14",
+    "globals": "^15.12.0",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.15.0",
+    "vite": "^5.4.11",
+    "vite-node": "^2.1.9",
+    "vitest": "^2.1.9"
+  }
+}
