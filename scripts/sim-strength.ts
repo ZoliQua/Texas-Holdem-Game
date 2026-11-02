@@ -11,10 +11,11 @@
  */
 import { ROSTER, type BotProfile, type Difficulty } from '../src/bots/profiles';
 import { playTournament } from '../src/bots/simulate';
+import { DEFAULT_LENGTH, handsPerLevel } from '../src/engine/schedule';
 
 const MATCHES = Math.max(2, Number(process.argv[2] ?? 500));
-// Provisional level length until the blind schedule is calibrated (override with HPL=…).
-const HANDS_PER_LEVEL = Number(process.env.HPL ?? 40);
+// The default heads-up structure of the game (45 min); override with HPL=… to test other lengths.
+const HANDS_PER_LEVEL = Number(process.env.HPL ?? handsPerLevel('headsUp', DEFAULT_LENGTH));
 const ONLY = process.env.PAIR;
 const PAIRS: [Difficulty, Difficulty][] = [
   ['hard', 'medium'],

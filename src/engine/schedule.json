@@ -1,0 +1,58 @@
+{
+  "generatedBy": "scripts/calibrate-blinds.ts (npm run sim:calibrate)",
+  "tournaments": 300,
+  "table": "medium pool (seatBots), player seat = medium tight-aggressive bot; a run ends when that seat is out",
+  "model": {
+    "dealS": 2.5,
+    "botActionS": 1.3,
+    "humanActionS": 4,
+    "streetS": 1.5,
+    "awardS": 3
+  },
+  "entries": {
+    "headsUp": {
+      "20": {
+        "handsPerLevel": 29,
+        "medianMin": 20.2,
+        "reachable": true
+      },
+      "30": {
+        "handsPerLevel": 63,
+        "medianMin": 29.2,
+        "reachable": true
+      },
+      "45": {
+        "handsPerLevel": 400,
+        "medianMin": 43.7,
+        "reachable": true
+      },
+      "60": {
+        "handsPerLevel": 400,
+        "medianMin": 43.7,
+        "reachable": false
+      }
+    },
+    "sixMax": {
+      "20": {
+        "handsPerLevel": 14,
+        "medianMin": 20.7,
+        "reachable": true
+      },
+      "30": {
+        "handsPerLevel": 25,
+        "medianMin": 30.1,
+        "reachable": true
+      },
+      "45": {
+        "handsPerLevel": 53,
+        "medianMin": 45.8,
+        "reachable": true
+      },
+      "60": {
+        "handsPerLevel": 108,
+        "medianMin": 59.2,
+        "reachable": true
+      }
+    }
+  }
+}
