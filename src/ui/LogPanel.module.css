@@ -1,0 +1,155 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.panel .toggle {
+  display: none;
+  width: 100%;
+  justify-content: space-between;
+  font-weight: 700;
+}
+
+.badge {
+  margin-left: auto;
+  margin-right: 8px;
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--game-color, var(--accent));
+  color: #0f1016;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.body {
+  overflow-y: auto;
+  max-height: min(70vh, 640px);
+  padding-right: 4px;
+  overscroll-behavior: contain;
+}
+
+.empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-mute);
+}
+
+.hand {
+  padding: 8px 0 10px;
+  border-top: 1px solid var(--panel-border);
+}
+
+.hand:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.handTitle {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-strong);
+}
+
+.street {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+
+.cards {
+  display: inline-flex;
+  gap: 2px;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+.lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.lines li {
+  display: block;
+}
+
+.lines li .cards {
+  vertical-align: -4px;
+}
+
+.info {
+  color: var(--text-dim);
+}
+
+.act {
+  color: var(--text);
+}
+
+.show {
+  color: var(--text-strong);
+}
+
+/* Results: bold and marked with a symbol, not only coloured. */
+.win {
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.win::before {
+  content: '★';
+  margin-right: 6px;
+  color: var(--game-color, var(--accent));
+}
+
+.out {
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.out::before {
+  content: '✕';
+  margin-right: 6px;
+}
+
+.more {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.title {
+  margin-bottom: 8px;
+}
+
+@media (max-width: 720px) {
+  .panel .toggle {
+    display: flex;
+  }
+
+  .title {
+    display: none;
+  }
+
+  .body {
+    display: none;
+    max-height: 55vh;
+    margin-top: 8px;
+  }
+
+  .open .body {
+    display: block;
+  }
+}
