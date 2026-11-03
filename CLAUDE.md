@@ -19,6 +19,11 @@
   * `npm run check` — lint → typecheck → test → build (same as CI)
   * `npm run sim:strength` — bot-only heads-up matches per pool pair (strength acceptance)
   * `npm run sim:calibrate` — bot-only tournaments that write `src/engine/schedule.json`
+* **Scoring**: `tournamentScore` in `src/game/scoring.ts` — base easy 1000 / medium 2500 / hard 5000 × 6-max share
+  `[1, .6, .4, .25, .1, 0]` or heads-up win 0.4. One run = one tournament, ended when the player busts or wins. Max 5000.
+* **Session**: `GameState` under `arcade.session.holdem`, schema `SESSION_SCHEMA = 1`, guarded by `isHoldemSession`
+  (structure, chip conservation, unique cards, roster bots). Restored sessions are always paused.
+* **Prefs**: `holdem.table` (`neon`|`classic`|`luxe`), `holdem.deck` (`color`|`grey`), `holdem.speed` (`slow`|`normal`|`fast`).
 * **Communication**: respond to the user in **Hungarian** in chat, even though this file and the codebase are in English.
 
 If any fact above disagrees with the real repository, verify first and flag the divergence to the user before editing code.
@@ -59,6 +64,27 @@ Arcade-Game-Center portal, and that is easy to follow over a 20–60 minute sess
 * Randomness is always injected (seeded mulberry32). The deck order is part of the saved table state.
 * No information by colour alone: suits have distinct shapes, the active seat has a dashed outline plus a label, folded /
   all-in / out seats carry text tags, winning cards are raised and outlined.
+
+---
+
+## Layout
+
+```
+src/
+  arcade/        vendored kit (+ the holdem registration patch)
+  engine/        cards, rng, evaluate, hand, pots, tournament, blinds, schedule(.json), stats — pure
+  bots/          view (BotView), profiles (ROSTER, seatBots), preflop, equity, strength, decide, tells, simulate
+  game/          state (advance, planBotTurn), scoring, persist, useBotTurns, speed
+  ui/            Table, Seat, CardView, Character, Chips, ActionBar, LogPanel, CharacterCard, SetupScreen, SettingsPanel, …
+  hooks/         useHoldemKeys
+  demo/          HoldemDemo
+  HoldemGame.tsx the embeddable game
+scripts/         sim-strength.ts, calibrate-blinds.ts
+```
+
+Pacing: every applied action sets `pending` (a nonce); the game settles it after the animation, and no action is accepted while
+it is set. `useBotTurns` plans one decision per turn (deterministic rng per turn) and dispatches it after the thinking delay.
+Re-run `npm run sim:calibrate` and `npm run sim:strength` after changing bot behaviour, and commit the new `schedule.json`.
 
 ---
 
