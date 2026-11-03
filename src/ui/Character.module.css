@@ -1,0 +1,199 @@
+.char {
+  display: block;
+  height: auto;
+  overflow: visible;
+  flex: none;
+}
+
+.lean,
+.body,
+.head,
+.ears,
+.armL,
+.armR,
+.chips,
+.pupils,
+.eyeWhite,
+.lids rect {
+  transform-box: fill-box;
+  transition: transform calc(260ms * var(--anim, 1)) ease-out;
+}
+
+.lean {
+  transform-origin: 50% 100%;
+}
+.head {
+  transform-origin: 50% 90%;
+}
+.armL {
+  transform-origin: 50% 10%;
+}
+.armR {
+  transform-origin: 50% 10%;
+}
+.ears {
+  transform-origin: 50% 100%;
+}
+.eyeWhite {
+  transform-origin: center;
+}
+
+/* Blinking eyelids (scaled to nothing between blinks). */
+.lids rect {
+  transform-origin: 50% 0%;
+  transform: scaleY(0);
+  animation: blink 5.2s infinite;
+}
+
+@keyframes blink {
+  0%, 94%, 100% { transform: scaleY(0); }
+  96.5% { transform: scaleY(1); }
+}
+
+.chips {
+  opacity: 0;
+}
+
+/* ── Poses ───────────────────────────────────────────────── */
+
+.pose-idle .body {
+  animation: breathe 3.6s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.025); }
+}
+
+.pose-thinking .head {
+  transform: rotate(-7deg);
+}
+.pose-thinking .armR {
+  transform: translate(-14px, -18px) rotate(-30deg);
+}
+
+.pose-fold .lean {
+  transform: translateY(5px) scale(0.96);
+}
+.pose-fold .head {
+  transform: rotate(10deg) translateY(4px);
+}
+.pose-fold .armL {
+  transform: rotate(18deg);
+}
+.pose-fold .armR {
+  transform: rotate(-18deg);
+}
+
+.pose-bet .armR {
+  animation: push calc(700ms * var(--anim, 1)) ease-out both;
+}
+
+@keyframes push {
+  0% { transform: none; }
+  45% { transform: translate(-10px, -16px) rotate(-55deg); }
+  100% { transform: translate(-6px, -8px) rotate(-35deg); }
+}
+
+.pose-allIn .armL {
+  transform: translate(2px, -22px) rotate(160deg);
+}
+.pose-allIn .armR {
+  transform: translate(-2px, -22px) rotate(-160deg);
+}
+.pose-allIn .lean {
+  animation: hop calc(520ms * var(--anim, 1)) ease-out 2;
+}
+
+.pose-win .armL {
+  transform: translate(2px, -22px) rotate(150deg);
+}
+.pose-win .armR {
+  transform: translate(-2px, -22px) rotate(-150deg);
+}
+.pose-win .lean {
+  animation: hop calc(600ms * var(--anim, 1)) ease-in-out infinite;
+}
+
+@keyframes hop {
+  0%, 100% { transform: translateY(0); }
+  45% { transform: translateY(-7px); }
+}
+
+.pose-busted {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+.pose-busted .lean {
+  transform: translateY(6px) scale(0.94);
+}
+
+/* ── Tells (own-hand cues; animation, never colour) ──────── */
+
+.tell-earTwitch .ears {
+  animation: twitch calc(var(--cue-dur, 900ms) * var(--anim, 1)) ease-in-out var(--cue-delay, 0ms) 1 both;
+}
+
+@keyframes twitch {
+  0%, 100% { transform: none; }
+  10%, 30%, 50% { transform: rotate(-9deg) translateY(-2px); }
+  20%, 40%, 60% { transform: rotate(9deg) translateY(-2px); }
+  70% { transform: none; }
+}
+
+.tell-glance .pupils {
+  animation: glance calc(var(--cue-dur, 900ms) * var(--anim, 1)) ease-in-out var(--cue-delay, 0ms) 1 both;
+}
+
+@keyframes glance {
+  0%, 100% { transform: none; }
+  20%, 45% { transform: translate(-3px, 2px); }
+  60%, 85% { transform: translate(3px, 2px); }
+}
+
+.tell-leanBack .lean {
+  animation: leanBack calc(var(--cue-dur, 900ms) * var(--anim, 1)) ease-in-out var(--cue-delay, 0ms) 1 both;
+}
+
+@keyframes leanBack {
+  0%, 100% { transform: none; }
+  30%, 75% { transform: translate(0, 4px) scale(0.93) rotate(-5deg); }
+}
+
+.tell-chipShuffle .chips {
+  animation: shuffle calc(var(--cue-dur, 900ms) * var(--anim, 1)) ease-in-out var(--cue-delay, 0ms) 1 both;
+}
+
+@keyframes shuffle {
+  0% { opacity: 0; transform: none; }
+  10% { opacity: 1; }
+  25%, 55% { transform: translateY(-4px); }
+  40%, 70% { transform: translateY(0); }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.tell-longStare .eyeWhite {
+  animation: stare calc(var(--cue-dur, 1200ms) * var(--anim, 1)) ease-out var(--cue-delay, 0ms) 1 both;
+}
+.tell-longStare .lids rect {
+  animation: none;
+}
+.tell-longStare .pupils {
+  transform: translateY(1px);
+}
+
+@keyframes stare {
+  0% { transform: none; }
+  15%, 85% { transform: scale(1.28); }
+  100% { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pose-idle .body,
+  .pose-win .lean,
+  .lids rect {
+    animation: none;
+  }
+}
