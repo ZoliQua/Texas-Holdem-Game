@@ -1,10 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useLang, useMessages } from '../arcade';
 import type { TellCue } from '../bots/tells';
 import { evaluate7 } from '../engine/evaluate';
 import { buildPots } from '../engine/pots';
 import type { LogEvent, TableState } from '../engine/types';
 import { animationFactor, type Speed } from '../game/speed';
 import { PLAYER_ID, type GameState } from '../game/state';
+import { MESSAGES } from '../i18n';
 import { CardView } from './CardView';
 import type { Pose } from './Character';
 import { Chips } from './Chips';
@@ -103,6 +105,8 @@ function poseOf(t: TableState, id: string, winnerIds: Set<string>): Pose {
 }
 
 export function Table({ state, theme, deck, speed, cues, callouts, onOpenCharacter, turn = null, orientation: forced, mini = false }: TableProps) {
+  const tr = useMessages(MESSAGES);
+  const [lang] = useLang();
   const [ref, orientation] = useOrientation(forced);
   const t = state.table;
   const spec = THEMES[theme];
@@ -186,7 +190,7 @@ export function Table({ state, theme, deck, speed, cues, callouts, onOpenCharact
         data-theme-table={theme}
         style={vars}
         role="region"
-        aria-label="Poker table"
+        aria-label={tr('tableLabel')}
       >
         <svg className={styles.felt} viewBox={`0 0 ${box.w} ${box.h}`} aria-hidden="true" preserveAspectRatio="none">
           <defs>
@@ -240,7 +244,7 @@ export function Table({ state, theme, deck, speed, cues, callouts, onOpenCharact
 
         <div className={styles.layer}>
           {/* Board */}
-          <div className={styles.board} style={{ left: pct(felt.cx, box.w), top: pct(felt.cy, box.h) }} aria-label="Board">
+          <div className={styles.board} style={{ left: pct(felt.cx, box.w), top: pct(felt.cy, box.h) }} aria-label={tr('boardLabel')}>
             {Array.from({ length: 5 }, (_, i) => {
               const c = t.board[i];
               if (c === undefined) return <span key={`slot-${i}`} className={styles.slot} />;
@@ -266,18 +270,18 @@ export function Table({ state, theme, deck, speed, cues, callouts, onOpenCharact
               {done && wins.length > 0 ? (
                 wins.map((w, k) => (
                   <span key={k} className={styles.winLine}>
-                    {wins.length > 1 ? (k === 0 ? 'Main pot' : `Side pot ${k}`) : 'Pot'} {formatChips(w.amount)} →{' '}
-                    {w.ids.map((id) => (id === PLAYER_ID ? 'You' : (state.bots.find((b) => b.id === id)?.name ?? id))).join(' & ')}
+                    {wins.length > 1 ? (k === 0 ? tr('potMainWin') : tr('potSideWin', { k })) : tr('pot')} {formatChips(w.amount, lang)} →{' '}
+                    {w.ids.map((id) => (id === PLAYER_ID ? tr('you') : (state.bots.find((b) => b.id === id)?.name ?? id))).join(' & ')}
                   </span>
                 ))
               ) : (
                 <>
-                  Pot {formatChips(potMiddle + t.players.reduce((s, p) => s + p.bet, 0))}
+                  {tr('pot')} {formatChips(potMiddle + t.players.reduce((s, p) => s + p.bet, 0), lang)}
                   {sidePots.length > 0 && (
                     <span className={styles.sidePots}>
                       {sidePots.map((p, k) => (
                         <span key={k}>
-                          {k === 0 ? 'Main' : `Side ${k}`} {formatChips(p.amount)}
+                          {k === 0 ? tr('potMain') : tr('potSide', { k })} {formatChips(p.amount, lang)}
                         </span>
                       ))}
                     </span>
@@ -331,7 +335,9 @@ export function Table({ state, theme, deck, speed, cues, callouts, onOpenCharact
           <span
             className={styles.dealerButton}
             style={{ left: pct(buttonSpot.x, box.w), top: pct(buttonSpot.y, box.h) }}
-            aria-label={`Dealer button: ${t.players[t.button]?.id === PLAYER_ID ? 'you' : (state.bots.find((b) => b.id === t.players[t.button]?.id)?.name ?? '')}`}
+            aria-label={tr('dealerButton', {
+              name: t.players[t.button]?.id === PLAYER_ID ? tr('dealerYou') : (state.bots.find((b) => b.id === t.players[t.button]?.id)?.name ?? ''),
+            })}
           >
             D
           </span>

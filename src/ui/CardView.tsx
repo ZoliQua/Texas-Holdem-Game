@@ -1,5 +1,8 @@
 import type { CSSProperties } from 'react';
-import { cardName, rankLabel, rankOf, suitOf, type Card, type Suit } from '../engine/cards';
+import { useMessages } from '../arcade';
+import { rankLabel, rankOf, suitOf, type Card, type Suit } from '../engine/cards';
+import { MESSAGES } from '../i18n';
+import { cardNameText } from './format';
 import { SUIT_FILL, type DeckStyle } from './themes';
 import styles from './CardView.module.css';
 
@@ -58,6 +61,7 @@ export type CardViewProps = {
 
 /** One playing card: big corner index (readable when overlapped) and a big centre pip. */
 export function CardView({ card, deck, size, highlight = false, faceDown = false, back = '#2b3a7a', className, style }: CardViewProps) {
+  const t = useMessages(MESSAGES);
   const hidden = faceDown || card === null;
   const cls = [styles.card, highlight ? styles.highlight : '', hidden ? styles.down : '', className ?? '']
     .filter(Boolean)
@@ -65,7 +69,7 @@ export function CardView({ card, deck, size, highlight = false, faceDown = false
   const css: CSSProperties = { ...(size > 0 ? { width: size } : null), ...style };
   if (hidden) {
     return (
-      <svg className={cls} style={css} viewBox="0 0 100 140" role="img" aria-label="Face-down card">
+      <svg className={cls} style={css} viewBox="0 0 100 140" role="img" aria-label={t('cardDown')}>
         <rect x="1.5" y="1.5" width="97" height="137" rx="11" fill={back} stroke="rgba(255,255,255,.7)" strokeWidth="3" />
         <rect x="12" y="12" width="76" height="116" rx="7" fill="none" stroke="rgba(255,255,255,.35)" strokeWidth="2" />
         <path d="M50 30 L70 70 L50 110 L30 70 Z" fill="none" stroke="rgba(255,255,255,.28)" strokeWidth="2" />
@@ -77,8 +81,8 @@ export function CardView({ card, deck, size, highlight = false, faceDown = false
   const fill = SUIT_FILL[deck][suit];
   const rank = rankLabel(rankOf(card));
   return (
-    <svg className={cls} style={css} viewBox="0 0 100 140" role="img" aria-label={cardName(card)} data-card={card}>
-      <title>{cardName(card)}</title>
+    <svg className={cls} style={css} viewBox="0 0 100 140" role="img" aria-label={cardNameText(card, t)} data-card={card}>
+      <title>{cardNameText(card, t)}</title>
       <rect
         x="1.5"
         y="1.5"

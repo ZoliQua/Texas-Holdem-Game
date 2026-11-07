@@ -39,7 +39,7 @@ describe('<LogPanel />', () => {
     expect(screen.getByText('You post the small blind 50')).toBeTruthy();
     for (const street of ['Preflop', 'Flop', 'Turn', 'River', 'Result']) expect(screen.getAllByText(street).length).toBeGreaterThan(0);
     expect(screen.getByText('Pixel shows — Flush, K-high')).toBeTruthy();
-    expect(screen.getByText(/Pixel wins 1\s990 with a flush, K-high/)).toBeTruthy();
+    expect(screen.getByText(/Pixel wins 1,990 with a flush, K-high/)).toBeTruthy();
     expect(screen.getByText('Pixel is out in 4th')).toBeTruthy();
     // The river group shows all five board cards.
     expect(screen.getAllByRole('img', { name: '4 of hearts' }).length).toBeGreaterThan(0);

@@ -60,24 +60,6 @@ export const STYLE_PARAMS: Record<Style, Pick<BotProfile, 'tightness' | 'aggress
   maniac: { tightness: 0.12, aggression: 0.94, bluff: 0.42, sizing: 0.85 },
 };
 
-export const STYLE_LABEL: Record<Style, string> = {
-  rock: 'Rock',
-  station: 'Calling station',
-  tag: 'Tight-aggressive',
-  lag: 'Loose-aggressive',
-  maniac: 'Maniac',
-};
-
-export const STYLE_BLURB: Record<Style, string> = {
-  rock: 'Plays very few hands and seldom puts chips in without a real holding.',
-  station: 'Loves to see flops and call bets. Hard to bluff, rarely raises.',
-  tag: 'Picks good starting hands and plays them hard.',
-  lag: 'Plays lots of hands and keeps the pressure on.',
-  maniac: 'Raises anything, anytime, and bluffs a lot.',
-};
-
-export const POOL_LABEL: Record<Difficulty, string> = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
-
 export const POOL_PARAMS: Record<Difficulty, Pick<BotProfile, 'skill' | 'samples' | 'mistake' | 'tellHonesty' | 'reverseTells'>> = {
   easy: { skill: 0, samples: 150, mistake: 0.35, tellHonesty: 0.8, reverseTells: 0 },
   medium: { skill: 0.45, samples: 600, mistake: 0.15, tellHonesty: 0.6, reverseTells: 0 },

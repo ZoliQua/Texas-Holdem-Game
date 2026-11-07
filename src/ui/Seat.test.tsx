@@ -28,7 +28,7 @@ describe('<Seat />', () => {
   it('shows the name and stack', () => {
     render(<Seat {...props()} />);
     expect(screen.getByText('Bruno')).toBeTruthy();
-    expect(screen.getByText('1 480')).toBeTruthy();
+    expect(screen.getByText('1,480')).toBeTruthy();
   });
 
   it('the active bot seat has the dashed outline class and “Thinking…”', () => {

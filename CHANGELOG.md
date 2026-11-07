@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Hungarian and German: the setup screen, action bar, table, seats, character cards, settings, results and the hand log follow the shared arcade language (`src/i18n.ts`). Showdown hands use the standard poker terms of each language.
+
+### Changed
+
+- The hand log is worded at render time from the stored events (hand values are re-worded from the evaluator's English text), so tournaments saved before this change render in every language; the save format is unchanged.
+- Chip amounts and points use the language's digit grouping (1,240 · 1240 · 1.240) instead of a space.
+
 ## [1.0.0] — 2026-11-03
 
 ### Added

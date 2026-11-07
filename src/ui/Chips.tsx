@@ -1,4 +1,6 @@
 import type { CSSProperties } from 'react';
+import { useLang, useMessages } from '../arcade';
+import { MESSAGES } from '../i18n';
 import { formatChips } from './format';
 import styles from './Table.module.css';
 
@@ -31,10 +33,12 @@ export function Chips({
   className?: string;
   style?: CSSProperties;
 }) {
+  const t = useMessages(MESSAGES);
+  const [lang] = useLang();
   if (amount <= 0) return null;
   const stack = chipStack(amount);
   return (
-    <span className={`${styles.chips} ${className ?? ''}`} style={style} aria-label={`${formatChips(amount)} chips`}>
+    <span className={`${styles.chips} ${className ?? ''}`} style={style} aria-label={t('chipsLabel', { n: formatChips(amount, lang) })}>
       <svg viewBox={`0 0 24 ${10 + stack.length * 3}`} className={styles.chipSvg} aria-hidden="true">
         {stack.map((d, i) => (
           <ellipse
@@ -50,7 +54,7 @@ export function Chips({
           />
         ))}
       </svg>
-      {label && <span className={styles.chipAmount}>{formatChips(amount)}</span>}
+      {label && <span className={styles.chipAmount}>{formatChips(amount, lang)}</span>}
     </span>
   );
 }

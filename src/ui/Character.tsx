@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
+import { useMessages } from '../arcade';
 import type { CharacterLook, Species } from '../bots/profiles';
 import type { TellCue } from '../bots/tells';
+import { MESSAGES, type MessageKey } from '../i18n';
 import styles from './Character.module.css';
 
 import type { Pose } from './pose';
@@ -291,7 +293,16 @@ export type CharacterProps = {
   style?: React.CSSProperties;
 };
 
+const SPECIES_KEY: Record<Species, MessageKey> = {
+  tortoise: 'spTortoise', mouse: 'spMouse', bear: 'spBear', pig: 'spPig', raccoon: 'spRaccoon', owl: 'spOwl', dog: 'spDog',
+  cat: 'spCat', rabbit: 'spRabbit', frog: 'spFrog', panda: 'spPanda', penguin: 'spPenguin', wolf: 'spWolf', fox: 'spFox', robot: 'spRobot',
+};
+const POSE_KEY: Record<Pose, MessageKey> = {
+  idle: 'poseIdle', thinking: 'poseThinking', fold: 'poseFold', bet: 'poseBet', allIn: 'poseAllIn', win: 'poseWin', busted: 'poseBusted',
+};
+
 export function Character({ look, pose, cue, size, className, style }: CharacterProps) {
+  const t = useMessages(MESSAGES);
   const dark = '#22232b';
   const shellSpecies = look.species === 'tortoise';
   const cls = [styles.char, styles[`pose-${pose}`], cue ? styles[`tell-${cue.kind}`] : '', className ?? ''].filter(Boolean).join(' ');
@@ -304,7 +315,7 @@ export function Character({ look, pose, cue, size, className, style }: Character
       style={{ ...(size > 0 ? { width: size } : null), ...cueStyle, ...style }}
       viewBox="-6 -10 112 114"
       role="img"
-      aria-label={`${look.species} character, ${pose}`}
+      aria-label={t('charLabel', { species: t(SPECIES_KEY[look.species]), pose: t(POSE_KEY[pose]) })}
       data-pose={pose}
       data-tell={cue?.kind ?? undefined}
     >

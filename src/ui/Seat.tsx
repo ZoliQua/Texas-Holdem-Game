@@ -1,7 +1,9 @@
 import type { CSSProperties } from 'react';
+import { useLang, useMessages } from '../arcade';
 import type { BotProfile } from '../bots/profiles';
 import type { TellCue } from '../bots/tells';
 import type { PlayerState } from '../engine/types';
+import { MESSAGES, type MessageKey } from '../i18n';
 import { CardView } from './CardView';
 import { Character, type Pose } from './Character';
 import { formatChips } from './format';
@@ -30,13 +32,16 @@ export type SeatProps = {
   style?: CSSProperties;
 };
 
+const TAG_KEY: Record<'out' | 'allin' | 'fold', MessageKey> = { out: 'tagOut', allin: 'tagAllIn', fold: 'tagFold' };
+
 /** The player's own seat face. */
 function PlayerBadge() {
+  const t = useMessages(MESSAGES);
   return (
     <svg viewBox="0 0 100 100" className={styles.youBadge} aria-hidden="true">
       <circle cx="50" cy="50" r="46" fill="var(--seat-stroke)" />
       <text x="50" y="64" textAnchor="middle" fontSize="40" fontWeight="800" fill="var(--seat-bg)" fontFamily="ui-sans-serif, system-ui">
-        You
+        {t('you')}
       </text>
     </svg>
   );
@@ -59,9 +64,12 @@ export function Seat({
   className,
   style,
 }: SeatProps) {
+  const t = useMessages(MESSAGES);
+  const [lang] = useLang();
   const me = profile === null;
-  const name = profile?.name ?? 'You';
-  const tag = player.out ? 'OUT' : player.allIn ? 'ALL-IN' : player.folded ? 'FOLD' : null;
+  const name = profile?.name ?? t('you');
+  const tagKind = player.out ? 'out' : player.allIn ? 'allin' : player.folded ? 'fold' : null;
+  const tag = tagKind ? t(TAG_KEY[tagKind]) : null;
   const cls = [
     styles.seat,
     me ? styles.me : '',
@@ -78,11 +86,14 @@ export function Seat({
   ) : (
     <Character look={(profile as BotProfile).look} pose={pose} cue={cue} size={0} className={styles.avatarArt} />
   );
-  const label = `${name}, ${formatChips(player.stack)} chips${tag ? `, ${tag.toLowerCase()}` : ''}${active ? (me ? ', your turn' : ', thinking') : ''}`;
+  const label =
+    t('seatLabel', { name, n: formatChips(player.stack, lang) }) +
+    (tag ? `, ${tag.toLowerCase()}` : '') +
+    (active ? (me ? t('seatTurnYou') : t('seatThinking')) : '');
 
   return (
     <div className={cls} style={style} data-seat={player.id} aria-label={label}>
-      {active && <span className={styles.turnLabel}>{me ? 'Your turn' : 'Thinking…'}</span>}
+      {active && <span className={styles.turnLabel}>{me ? t('yourTurn') : t('thinking')}</span>}
       {callout && (
         <span className={styles.callout} role="status" key={callout}>
           {callout}
@@ -90,7 +101,7 @@ export function Seat({
       )}
       <div className={styles.pill}>
         {onOpen && !me ? (
-          <button type="button" className={styles.avatar} onClick={onOpen} aria-label={`About ${name}`} title={`About ${name}`}>
+          <button type="button" className={styles.avatar} onClick={onOpen} aria-label={t('about', { name })} title={t('about', { name })}>
             {avatar}
           </button>
         ) : (
@@ -103,11 +114,11 @@ export function Seat({
         )}
         <span className={styles.info}>
           <strong className={styles.name}>{name}</strong>
-          <span className={styles.stack}>{formatChips(player.stack)}</span>
+          <span className={styles.stack}>{formatChips(player.stack, lang)}</span>
         </span>
-        {isDealer && <span className={styles.srOnly}>Dealer</span>}
+        {isDealer && <span className={styles.srOnly}>{t('dealer')}</span>}
       </div>
-      {tag && <span className={`${styles.tag} ${styles[`tag-${tag === 'ALL-IN' ? 'allin' : tag.toLowerCase()}`]}`}>{tag}</span>}
+      {tagKind && <span className={`${styles.tag} ${styles[`tag-${tagKind}`]}`}>{tag}</span>}
       {player.hole && (showHole || !player.out) && (me || !player.folded) && (
         <span className={`${styles.hole} ${me ? styles.holeMe : ''}`}>
           {player.hole.map((c, i) => (

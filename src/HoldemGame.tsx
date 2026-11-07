@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useReducer, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type CSSProperties } from 'react';
 import {
   clearSession,
   formatClock,
+  formatNumber,
+  gameName,
   GameOverlay,
   KeyHelp,
   SaveBadge,
@@ -9,6 +11,9 @@ import {
   useArcadeRun,
   useRestoredSession,
   useRunTimer,
+  useKitMessages,
+  useLang,
+  useMessages,
   useSessionAutosave,
   type ArcadeGameProps,
   type ArcadeStatus,
@@ -32,15 +37,17 @@ import {
 } from './game/state';
 import { useBotTurns } from './game/useBotTurns';
 import { useHoldemKeys } from './hooks/useHoldemKeys';
+import { MESSAGES, type MessageKey } from './i18n';
 import { ActionBar, type ActionBarHandle } from './ui/ActionBar';
 import { CharacterCard } from './ui/CharacterCard';
 import { calloutFor, formatChips, ordinal } from './ui/format';
+import { FORMAT_LABEL, POOL_NOTE_KEY } from './ui/labels';
 import { LogPanel } from './ui/LogPanel';
 import { SettingsPanel } from './ui/SettingsPanel';
 import { SetupScreen } from './ui/SetupScreen';
 import { Table } from './ui/Table';
 import { useSettings } from './ui/useSettings';
-import type { Action } from './engine/types';
+import type { Action, LogEvent } from './engine/types';
 import styles from './App.module.css';
 
 /** Bump when GameState changes shape; older saves are then discarded. */
@@ -58,20 +65,23 @@ export const RESULT_DELAY_MS = 1600;
 /** UI phase over the tournament: before the first deal, playing, paused. */
 type UiPhase = 'idle' | 'live' | 'paused';
 
-const KEYS: [string, string][] = [
-  ['F', 'Fold'],
-  ['C', 'Check / call'],
-  ['R', 'Focus the raise slider'],
-  ['← →', 'Raise amount ± 1 big blind'],
-  ['A', 'Select all-in'],
-  ['Enter', 'Confirm bet / raise · start'],
-  ['P Esc', 'Pause / resume'],
+const KEYS: [string, MessageKey][] = [
+  ['F', 'keyFold'],
+  ['C', 'keyCheckCall'],
+  ['R', 'keyRaise'],
+  ['← →', 'keyNudge'],
+  ['A', 'keyAllIn'],
+  ['Enter', 'keyConfirm'],
+  ['P Esc', 'keyPause'],
 ];
 
 const newSeed = () => (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
 
 export function HoldemGame(props: ArcadeGameProps = {}) {
   const { embedded = false } = props;
+  const tr = useMessages(MESSAGES);
+  const k = useKitMessages();
+  const [lang] = useLang();
   const restored = useRestoredSession<GameState>('holdem', SESSION_SCHEMA, isHoldemSession);
   const resumable = restored !== null && (restored.data.phase === 'playing' || restored.data.phase === 'handOver');
 
@@ -89,7 +99,8 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
   const [setup, setSetup] = useState<Setup>(game.setup);
   const [cues, setCues] = useState<Record<string, TellCue | null>>({});
   const [turn, setTurn] = useState<{ id: string; ms: number } | null>(null);
-  const [callouts, setCallouts] = useState<Record<string, string | null>>({});
+  // The event behind each seat's bubble; worded at render time, so a language switch re-words it.
+  const [callouts, setCallouts] = useState<Record<string, LogEvent | null>>({});
   const [showResult, setShowResult] = useState(false);
   const settings = useSettings();
   const factor = SPEED_FACTOR[settings.speed];
@@ -163,10 +174,10 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
     const t = game.table;
     const from = seen.current.hand === t.handNo ? seen.current.count : 0;
     seen.current = { hand: t.handNo, count: t.events.length };
-    const fresh = t.events.slice(from).map(calloutFor).filter((c): c is { id: string; text: string } => c !== null);
+    const fresh = t.events.slice(from).filter((e) => calloutFor(e) !== null);
     if (fresh.length === 0) return;
-    const latest: Record<string, string> = {};
-    for (const c of fresh) latest[c.id] = c.text;
+    const latest: Record<string, LogEvent> = {};
+    for (const e of fresh) latest[(calloutFor(e) as { id: string }).id] = e;
     setCallouts((prev) => ({ ...prev, ...latest }));
     for (const id of Object.keys(latest)) {
       window.clearTimeout(bubbleTimers.current.get(id));
@@ -259,52 +270,64 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
   const next = blindsForLevel(t.level + 1);
   const handsLeft = Math.max(0, t.handsPerLevel - t.handsInLevel);
   const alive = t.players.filter((p) => !p.out).length;
-  const name = useCallback((id: string) => (id === PLAYER_ID ? 'You' : (game.bots.find((b) => b.id === id)?.name ?? id)), [game.bots]);
+  const name = useCallback(
+    (id: string) => (id === PLAYER_ID ? tr('you') : (game.bots.find((b) => b.id === id)?.name ?? id)),
+    [game.bots, tr],
+  );
+  const calloutTexts = useMemo(() => {
+    const out: Record<string, string | null> = {};
+    for (const [id, e] of Object.entries(callouts)) out[id] = e ? (calloutFor(e, lang)?.text ?? null) : null;
+    return out;
+  }, [callouts, lang]);
+  const keyRows = useMemo(() => KEYS.map(([keys, action]): [string, string] => [keys, tr(action)]), [tr]);
   const openProfile = openChar ? (game.bots.find((b) => b.id === openChar) ?? null) : null;
   const best = Math.max(stats.best, score);
   const newBest = score > 0 && score > stats.bestBeforeRun;
 
   let statusLabel: string | undefined;
   if (status === 'running') {
-    if (isPlayerTurn(game)) statusLabel = 'Your turn';
-    else if (game.phase === 'handOver') statusLabel = 'Next hand…';
-    else statusLabel = `${name(t.players[t.toAct ?? 0]?.id ?? '')} is thinking…`;
+    if (isPlayerTurn(game)) statusLabel = tr('yourTurn');
+    else if (game.phase === 'handOver') statusLabel = tr('nextHandStatus');
+    else statusLabel = tr('isThinking', { name: name(t.players[t.toAct ?? 0]?.id ?? '') });
   }
 
   let overlay: { title: string; message?: string; actions: OverlayAction[] } | null = null;
   if (confirmNew) {
     overlay = {
-      title: 'Abandon this tournament?',
-      message: 'It will not be recorded. Your stats and Best stay as they are.',
+      title: tr('abandonTitle'),
+      message: tr('abandonBody'),
       actions: [
-        { label: 'Abandon', onClick: toSetup, primary: true, kbd: 'Enter' },
-        { label: 'Keep playing', onClick: () => setConfirmNew(false), kbd: 'Esc' },
+        { label: tr('abandon'), onClick: toSetup, primary: true, kbd: 'Enter' },
+        { label: tr('keepPlaying'), onClick: () => setConfirmNew(false), kbd: 'Esc' },
       ],
     };
   } else if (status === 'paused') {
     overlay = welcomeBack
       ? {
-          title: 'Welcome back',
-          message: `Your tournament was restored — hand #${t.handNo}, ${formatChips(me?.stack ?? 0)} chips, ${alive} players left.`,
+          title: k('welcomeBack'),
+          message: tr('welcomeBody', { hand: t.handNo, chips: formatChips(me?.stack ?? 0, lang), players: alive }),
           actions: [
-            { label: 'Continue', onClick: togglePause, primary: true, kbd: 'P' },
-            { label: 'New tournament', onClick: requestNew },
+            { label: tr('continue'), onClick: togglePause, primary: true, kbd: 'P' },
+            { label: tr('newTournament'), onClick: requestNew },
           ],
         }
       : {
-          title: 'Paused',
-          message: 'The bots wait for you. The tournament is autosaved — close the tab and continue later.',
+          title: k('paused'),
+          message: tr('pausedBody'),
           actions: [
-            { label: 'Resume', onClick: togglePause, primary: true, kbd: 'P' },
-            { label: 'New tournament', onClick: requestNew },
+            { label: k('resume'), onClick: togglePause, primary: true, kbd: 'P' },
+            { label: tr('newTournament'), onClick: requestNew },
           ],
         };
   } else if (status === 'gameOver' && showResult && place !== null) {
     const won = place === 1;
     overlay = {
-      title: won ? 'You won the tournament!' : `You finished ${ordinal(place)}`,
-      message: `${score > 0 ? `+${formatChips(score)} points` : 'No points this time'} · ${t.handNo} hands · ${formatClock(seconds)} · Best ${formatChips(best)}${newBest ? ' — new best!' : ''}`,
-      actions: [{ label: 'New tournament', onClick: toSetup, primary: true, kbd: 'Enter' }],
+      title: won ? tr('wonTitle') : tr('finishedTitle', { ord: ordinal(place, lang), n: place }),
+      message:
+        (score > 0 ? tr('resultPoints', { points: formatChips(score, lang) }) : tr('resultNoPoints')) +
+        tr('resultTail', { hands: formatNumber(t.handNo, lang), time: formatClock(seconds), best: formatChips(best, lang) }) +
+        (newBest ? tr('newBestSuffix') : ''),
+      actions: [{ label: tr('newTournament'), onClick: toSetup, primary: true, kbd: 'Enter' }],
     };
   }
 
@@ -316,8 +339,8 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
       {!embedded && (
         <header className="arc-game__head">
           <div>
-            <h1 className="arc-game__title">Texas Hold&apos;em</h1>
-            <p className="arc-game__sub">No-limit sit &amp; go against bots with their own faces, styles and tells.</p>
+            <h1 className="arc-game__title">{gameName('holdem', lang)}</h1>
+            <p className="arc-game__sub">{tr('subtitle')}</p>
           </div>
         </header>
       )}
@@ -328,16 +351,19 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
         items={
           inTournament || finished
             ? [
-                { label: 'Blinds', value: `${formatChips(sb)}/${formatChips(bb)}` },
-                { label: `Next ${formatChips(next.sb)}/${formatChips(next.bb)}`, value: handsLeft > 0 ? `in ${handsLeft}` : 'next hand' },
-                { label: 'Your stack', value: formatChips(me?.stack ?? 0) },
-                { label: 'Players', value: `${alive} / ${t.players.length}` },
-                { label: 'Time', value: formatClock(seconds) },
+                { label: tr('statBlinds'), value: `${formatChips(sb, lang)}/${formatChips(bb, lang)}` },
+                {
+                  label: tr('statNext', { sb: formatChips(next.sb, lang), bb: formatChips(next.bb, lang) }),
+                  value: handsLeft > 0 ? tr('statIn', { n: handsLeft }) : tr('statNextHand'),
+                },
+                { label: tr('statStack'), value: formatChips(me?.stack ?? 0, lang) },
+                { label: tr('statPlayers'), value: `${alive} / ${t.players.length}` },
+                { label: k('time'), value: formatClock(seconds) },
               ]
             : [
-                { label: 'Best', value: formatChips(stats.best) },
-                { label: 'Played', value: stats.plays },
-                { label: 'Time', value: formatClock(seconds) },
+                { label: k('best'), value: formatChips(stats.best, lang) },
+                { label: tr('statPlayed'), value: formatNumber(stats.plays, lang) },
+                { label: k('time'), value: formatClock(seconds) },
               ]
         }
       />
@@ -351,17 +377,17 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
               deck={settings.deck}
               speed={settings.speed}
               cues={cues}
-              callouts={callouts}
+              callouts={calloutTexts}
               turn={turn}
               onOpenCharacter={(id) => {
                 if (id !== PLAYER_ID) setOpenChar(id);
               }}
             />
             {status === 'idle' && (
-              <div className="arc-overlay" role="dialog" aria-label="New tournament">
+              <div className="arc-overlay" role="dialog" aria-label={tr('newTournament')}>
                 <div className={`arc-overlay__card ${styles.setupCard}`}>
-                  <h2 className="arc-overlay__title">Texas Hold&apos;em</h2>
-                  <p className="arc-overlay__msg">A sit &amp; go: the last player with chips wins. Pick your table.</p>
+                  <h2 className="arc-overlay__title">{gameName('holdem', lang)}</h2>
+                  <p className="arc-overlay__msg">{tr('setupBody')}</p>
                   <SetupScreen value={setup} onChange={setSetup} onStart={start} />
                 </div>
               </div>
@@ -378,18 +404,23 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
           <LogPanel log={game.log} name={name} you={PLAYER_ID} deck={settings.deck} />
 
           <section className="arc-panel">
-            <h2 className="arc-panel__title">Tournament</h2>
+            <h2 className="arc-panel__title">{tr('panelTournament')}</h2>
             <div className={styles.buttons}>
               <button type="button" className="arc-btn arc-btn--primary" onClick={status === 'idle' ? () => start(setup) : togglePause} disabled={finished}>
-                {status === 'running' ? 'Pause' : status === 'paused' ? 'Resume' : 'Start'}
+                {status === 'running' ? k('pause') : status === 'paused' ? k('resume') : k('start')}
               </button>
               <button type="button" className="arc-btn" onClick={requestNew} disabled={status === 'idle'}>
-                New tournament
+                {tr('newTournament')}
               </button>
             </div>
             {inTournament && (
               <p className={styles.note}>
-                {game.setup.format === 'headsUp' ? 'Heads-up' : '6-max'} · {game.setup.difficulty} · {game.setup.length} min · hand #{t.handNo}
+                {tr('tournamentNote', {
+                  format: tr(FORMAT_LABEL[game.setup.format]),
+                  difficulty: tr(POOL_NOTE_KEY[game.setup.difficulty]),
+                  length: game.setup.length,
+                  hand: t.handNo,
+                })}
               </p>
             )}
             <div className={styles.save}>
@@ -398,15 +429,15 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
           </section>
 
           <section className="arc-panel">
-            <h2 className="arc-panel__title">Settings</h2>
+            <h2 className="arc-panel__title">{tr('panelSettings')}</h2>
             <div className={styles.settings}>
               <SettingsPanel table={settings.table} deck={settings.deck} speed={settings.speed} set={settings.set} />
             </div>
           </section>
 
           <section className="arc-panel">
-            <h2 className="arc-panel__title">Keys</h2>
-            <KeyHelp rows={KEYS} />
+            <h2 className="arc-panel__title">{tr('panelKeys')}</h2>
+            <KeyHelp rows={keyRows} />
           </section>
         </aside>
       </div>

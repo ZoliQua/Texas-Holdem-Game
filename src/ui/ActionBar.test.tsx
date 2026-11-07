@@ -27,7 +27,7 @@ describe('<ActionBar />', () => {
     fireEvent.click(screen.getByRole('button', { name: /Raise to 240/ }));
     expect(onAction).toHaveBeenLastCalledWith({ kind: 'raise', amount: 240 });
     fireEvent.click(screen.getByRole('button', { name: /All-in/ }));
-    fireEvent.click(screen.getByRole('button', { name: /All-in 1\s500/ }));
+    fireEvent.click(screen.getByRole('button', { name: /All-in 1,500/ }));
     expect(onAction).toHaveBeenLastCalledWith({ kind: 'allIn' });
     expect(presetAmount('min', legal, 140, 60)).toBe(120);
     expect(presetAmount(0.75, legal, 140, 60)).toBe(195);

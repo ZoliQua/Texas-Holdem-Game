@@ -1,5 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { useLang, useMessages } from '../arcade';
 import type { Action, LegalActions } from '../engine/types';
+import { MESSAGES, type MessageKey } from '../i18n';
 import { formatChips } from './format';
 import { presetAmount } from './sizing';
 import styles from './ActionBar.module.css';
@@ -26,16 +28,18 @@ export type ActionBarProps = {
   onAction(a: Action): void;
 };
 
-const PRESETS: { label: string; f: number | 'min' | 'max' }[] = [
-  { label: 'Min', f: 'min' },
-  { label: '½ pot', f: 0.5 },
-  { label: '¾ pot', f: 0.75 },
-  { label: 'Pot', f: 1 },
-  { label: 'All-in', f: 'max' },
+const PRESETS: { label: MessageKey; f: number | 'min' | 'max' }[] = [
+  { label: 'presetMin', f: 'min' },
+  { label: 'presetHalf', f: 0.5 },
+  { label: 'presetThreeQuarter', f: 0.75 },
+  { label: 'presetPot', f: 1 },
+  { label: 'presetAllIn', f: 'max' },
 ];
 
 /** Fold · Check/Call · Bet/Raise with a slider, presets and a confirm button showing the amount. */
 export const ActionBar = forwardRef<ActionBarHandle, ActionBarProps>(function ActionBar({ legal, pot, betTo, bb, onAction }, ref) {
+  const t = useMessages(MESSAGES);
+  const [lang] = useLang();
   const canRaise = legal !== null && legal.minRaiseTo !== null;
   const min = legal?.minRaiseTo ?? 0;
   const max = legal?.maxRaiseTo ?? 0;
@@ -54,7 +58,7 @@ export const ActionBar = forwardRef<ActionBarHandle, ActionBarProps>(function Ac
   const value = Math.min(max, Math.max(min, amount));
   const bet = betTo === 0;
   const allIn = canRaise && value >= max;
-  const raiseLabel = allIn ? `All-in ${formatChips(value)}` : `${bet ? 'Bet' : 'Raise to'} ${formatChips(value)}`;
+  const raiseLabel = t(allIn ? 'abAllInN' : bet ? 'abBetN' : 'abRaiseToN', { n: formatChips(value, lang) });
 
   const act = (a: Action) => {
     if (latest.current.legal) onAction(a);
@@ -79,23 +83,23 @@ export const ActionBar = forwardRef<ActionBarHandle, ActionBarProps>(function Ac
 
   const disabled = legal === null;
   return (
-    <div className={styles.bar} role="group" aria-label="Your action" aria-disabled={disabled}>
+    <div className={styles.bar} role="group" aria-label={t('abGroup')} aria-disabled={disabled}>
       <div className={styles.main}>
         <button type="button" className={`arc-btn ${styles.fold}`} onClick={fold} disabled={disabled}>
-          Fold <kbd className="arc-kbd">F</kbd>
+          {t('abFold')} <kbd className="arc-kbd">F</kbd>
         </button>
         <button type="button" className={`arc-btn ${styles.call}`} onClick={checkOrCall} disabled={disabled}>
-          {legal?.canCheck || !legal ? 'Check' : `Call ${formatChips(legal.callAmount)}`}{' '}
+          {legal?.canCheck || !legal ? t('abCheck') : t('abCallN', { n: formatChips(legal.callAmount, lang) })}{' '}
           <kbd className="arc-kbd">C</kbd>
         </button>
         <button type="button" className={`arc-btn arc-btn--primary ${styles.raise}`} onClick={confirm} disabled={disabled || !canRaise}>
-          {canRaise ? raiseLabel : bet ? 'Bet' : 'Raise'} <kbd className="arc-kbd">Enter</kbd>
+          {canRaise ? raiseLabel : bet ? t('abBet') : t('abRaise')} <kbd className="arc-kbd">Enter</kbd>
         </button>
       </div>
       <div className={styles.sizing}>
         <label className={styles.slider}>
           <span className={styles.sliderLabel}>
-            {bet ? 'Bet' : 'Raise to'} <kbd className="arc-kbd">R</kbd> <kbd className="arc-kbd">←</kbd>
+            {bet ? t('abBet') : t('abRaiseTo')} <kbd className="arc-kbd">R</kbd> <kbd className="arc-kbd">←</kbd>
             <kbd className="arc-kbd">→</kbd>
           </span>
           <input
@@ -118,8 +122,8 @@ export const ActionBar = forwardRef<ActionBarHandle, ActionBarProps>(function Ac
                 setAmount((a) => Math.min(max, Math.max(min, a + dir * bb)));
               }
             }}
-            aria-label={bet ? 'Bet amount' : 'Raise to'}
-            aria-valuetext={formatChips(value)}
+            aria-label={bet ? t('abBetAmount') : t('abRaiseTo')}
+            aria-valuetext={formatChips(value, lang)}
           />
         </label>
         <div className={styles.presets}>
@@ -132,7 +136,7 @@ export const ActionBar = forwardRef<ActionBarHandle, ActionBarProps>(function Ac
               aria-pressed={canRaise && legal !== null && presetAmount(p.f, legal, pot, betTo) === value}
               onClick={() => legal && setAmount(presetAmount(p.f, legal, pot, betTo))}
             >
-              {p.label}
+              {t(p.label)}
               {p.f === 'max' && <kbd className="arc-kbd">A</kbd>}
             </button>
           ))}

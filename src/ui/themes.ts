@@ -5,7 +5,6 @@ export const TABLE_THEMES: readonly TableTheme[] = ['neon', 'classic', 'luxe'];
 export const DECK_STYLES: readonly DeckStyle[] = ['color', 'grey'];
 
 export type ThemeSpec = {
-  label: string;
   /** Room behind the table. */
   bg: string;
   rail: [string, string];
@@ -28,7 +27,6 @@ export type ThemeSpec = {
 /* Colours from the approved mockup (poker-table.html). */
 export const THEMES: Record<TableTheme, ThemeSpec> = {
   neon: {
-    label: 'Arcade neon',
     bg: '#0f1016',
     rail: ['#1c1e29', '#14151e'],
     railStroke: '#6b8cff',
@@ -43,7 +41,6 @@ export const THEMES: Record<TableTheme, ThemeSpec> = {
     highlight: '#f4b860',
   },
   classic: {
-    label: 'Classic casino',
     bg: '#101114',
     rail: ['#6b3a1f', '#3b1e0e'],
     railStroke: '#c9a46a',
@@ -58,7 +55,6 @@ export const THEMES: Record<TableTheme, ThemeSpec> = {
     highlight: '#ffd166',
   },
   luxe: {
-    label: 'Elegant dark',
     bg: '#0b0c10',
     rail: ['#26262b', '#0e0e11'],
     railStroke: '#b8954f',
