@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { useLang, useMessages } from '../arcade';
+import { useDental, useLang, useMessages } from '../arcade';
 import type { TellCue } from '../bots/tells';
 import { evaluate7 } from '../engine/evaluate';
 import { buildPots } from '../engine/pots';
@@ -13,7 +13,7 @@ import { Chips } from './Chips';
 import { formatChips } from './format';
 import { FELT, seatPositions, towardsCentre, VIEWBOX, type Orientation } from './layout';
 import { Seat } from './Seat';
-import { THEMES, type DeckStyle, type TableTheme } from './themes';
+import { themeSpec, type DeckStyle, type TableLook, type TableTheme } from './themes';
 import styles from './Table.module.css';
 
 export type TableProps = {
@@ -109,7 +109,10 @@ export function Table({ state, theme, deck, speed, cues, callouts, onOpenCharact
   const [lang] = useLang();
   const [ref, orientation] = useOrientation(forced);
   const t = state.table;
-  const spec = THEMES[theme];
+  const [dental] = useDental();
+  // Dental mode swaps in the clinic table for as long as it is on; the stored theme is untouched.
+  const look: TableLook = dental ? 'clinic' : theme;
+  const spec = themeSpec(look);
   const box = VIEWBOX[orientation];
   const felt = FELT[orientation];
   const n = Math.max(2, Math.min(6, t.players.length)) as 2 | 3 | 4 | 5 | 6;
@@ -187,18 +190,19 @@ export function Table({ state, theme, deck, speed, cues, callouts, onOpenCharact
       <div
         className={`${styles.table} ${mini ? styles.mini : ''}`}
         data-orientation={orientation}
-        data-theme-table={theme}
+        data-theme-table={look}
+        data-dental={dental}
         style={vars}
         role="region"
         aria-label={tr('tableLabel')}
       >
         <svg className={styles.felt} viewBox={`0 0 ${box.w} ${box.h}`} aria-hidden="true" preserveAspectRatio="none">
           <defs>
-            <radialGradient id={`felt-${theme}`}>
+            <radialGradient id={`felt-${look}`}>
               <stop offset="0" stopColor={spec.felt[0]} />
               <stop offset="1" stopColor={spec.felt[1]} />
             </radialGradient>
-            <linearGradient id={`rail-${theme}`} x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id={`rail-${look}`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stopColor={spec.rail[0]} />
               <stop offset="1" stopColor={spec.rail[1]} />
             </linearGradient>
@@ -221,10 +225,10 @@ export function Table({ state, theme, deck, speed, cues, callouts, onOpenCharact
               filter="url(#rail-glow)"
             />
           )}
-          <ellipse cx={felt.cx} cy={felt.cy} rx={felt.rx + 22} ry={felt.ry + 22} fill={`url(#rail-${theme})`} stroke={spec.railStroke} strokeWidth="2.5" />
-          <ellipse cx={felt.cx} cy={felt.cy} rx={felt.rx} ry={felt.ry} fill={`url(#felt-${theme})`} />
+          <ellipse cx={felt.cx} cy={felt.cy} rx={felt.rx + 22} ry={felt.ry + 22} fill={`url(#rail-${look})`} stroke={spec.railStroke} strokeWidth="2.5" />
+          <ellipse cx={felt.cx} cy={felt.cy} rx={felt.rx} ry={felt.ry} fill={`url(#felt-${look})`} />
           <ellipse cx={felt.cx} cy={felt.cy} rx={felt.rx * 0.78} ry={felt.ry * 0.72} fill="none" stroke={spec.feltLine} strokeWidth="1.5" />
-          {theme === 'classic' && (
+          {look === 'classic' && (
             <ellipse cx={felt.cx} cy={felt.cy} rx={felt.rx + 21} ry={felt.ry + 21} fill="none" stroke="#e7c98a" strokeOpacity=".35" strokeWidth="1" />
           )}
           <text

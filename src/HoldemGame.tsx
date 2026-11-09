@@ -353,8 +353,14 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
             ? [
                 { label: tr('statBlinds'), value: `${formatChips(sb, lang)}/${formatChips(bb, lang)}` },
                 {
-                  label: tr('statNext', { sb: formatChips(next.sb, lang), bb: formatChips(next.bb, lang) }),
-                  value: handsLeft > 0 ? tr('statIn', { n: handsLeft }) : tr('statNextHand'),
+                  label: tr('statNext'),
+                  value: (
+                    <span className={styles.wrapValue}>
+                      {handsLeft > 0
+                        ? tr('statIn', { sb: formatChips(next.sb, lang), bb: formatChips(next.bb, lang), n: handsLeft })
+                        : tr('statNextHand', { sb: formatChips(next.sb, lang), bb: formatChips(next.bb, lang) })}
+                    </span>
+                  ),
                 },
                 { label: tr('statStack'), value: formatChips(me?.stack ?? 0, lang) },
                 { label: tr('statPlayers'), value: `${alive} / ${t.players.length}` },
@@ -431,7 +437,7 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
           <section className="arc-panel">
             <h2 className="arc-panel__title">{tr('panelSettings')}</h2>
             <div className={styles.settings}>
-              <SettingsPanel table={settings.table} deck={settings.deck} speed={settings.speed} set={settings.set} />
+              <SettingsPanel table={settings.table} deck={settings.deck} speed={settings.speed} set={settings.set} dentalRowClass={styles.dentalRow} />
             </div>
           </section>
 

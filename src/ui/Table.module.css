@@ -27,6 +27,10 @@
 .table[data-theme-table='luxe'] {
   background: radial-gradient(120% 90% at 50% 40%, #13151d 0%, #0b0c10 70%);
 }
+/* Dental mode: a bright mint and white clinic room; labels switch to dark ink. */
+.table[data-theme-table='clinic'] {
+  background: radial-gradient(120% 90% at 50% 40%, #f6fcfa 0%, #d4ebe4 75%);
+}
 
 .felt {
   position: absolute;
@@ -573,4 +577,25 @@ button.avatar:focus-visible {
 
 .centre.top .callout::after {
   display: none;
+}
+
+/* ── Clinic (dental mode) contrast fixes: dark text on light surfaces ── */
+.table[data-theme-table='clinic'] .potLabel,
+.table[data-theme-table='clinic'] .turnLabel {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.table[data-theme-table='clinic'] .chipAmount {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--table-text);
+  box-shadow: 0 0 0 calc(var(--u) * 1) rgba(23, 58, 52, 0.15);
+}
+
+.table[data-theme-table='clinic'] .pill {
+  border-color: rgba(23, 58, 52, 0.18);
+  box-shadow: 0 calc(var(--u) * 3) calc(var(--u) * 10) rgba(23, 58, 52, 0.18);
+}
+
+.table[data-theme-table='clinic'] .me .pill {
+  border-color: var(--seat-stroke);
 }

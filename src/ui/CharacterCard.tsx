@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { formatNumber, LANG_LOCALES, useLang, useMessages, type Lang } from '../arcade';
+import { formatNumber, LANG_LOCALES, useDental, useLang, useMessages, type Lang } from '../arcade';
 import type { BotProfile, Style } from '../bots/profiles';
 import { aggressionFactor, pct, type PlayerStats } from '../engine/stats';
 import { MESSAGES, type MessageKey } from '../i18n';
 import { Character } from './Character';
+import { DENTAL_ROLE, ROLE_KEY } from './dentalOutfits';
 import { POOL_KEY } from './labels';
 import styles from './CharacterCard.module.css';
 
@@ -29,6 +30,7 @@ function bioKey(id: string): MessageKey | null {
 export function CharacterCard({ profile, stats, onClose }: { profile: BotProfile; stats: PlayerStats | undefined; onClose(): void }) {
   const t = useMessages(MESSAGES);
   const [lang] = useLang();
+  const [dental] = useDental();
   const close = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     close.current?.focus();
@@ -62,6 +64,7 @@ export function CharacterCard({ profile, stats, onClose }: { profile: BotProfile
           <div>
             <h2 className={styles.name}>{profile.name}</h2>
             <p className={styles.meta}>
+              {dental && <span className={styles.chip}>{t(ROLE_KEY[DENTAL_ROLE[profile.look.species]])}</span>}
               <span className={styles.chip}>{t(STYLE_KEY[profile.style])}</span>
               <span className={styles.chip}>{t('ccTable', { pool: t(POOL_KEY[profile.pool]) })}</span>
             </p>

@@ -9,9 +9,11 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - Hungarian and German: the setup screen, action bar, table, seats, character cards, settings, results and the hand log follow the shared arcade language (`src/i18n.ts`). Showdown hands use the standard poker terms of each language.
+- Dental mode (shared `arcade.dental`, off by default; toggle in the arcade top bar and in Settings): a mint and white clinic table replaces the chosen table theme while it is on (the stored theme is kept and returns when it is off); the fifteen characters wear dental outfits — dentist, tooth fairy, hygienist, patient with braces, orthodontist, assistant, oral surgeon, technician, professor, radiographer, nurse, curing-light robot and patients — with their species, poses and tells unchanged; card backs carry a tooth logo.
 
 ### Changed
 
+- Next-blinds tile: the label is just “Next blinds” („Következő vak”, „Nächste Blinds”) and the value carries the level and when it starts (“15/30 · in 52 hands”); the value wraps instead of being cut off (the Hungarian one was truncated).
 - The hand log is worded at render time from the stored events (hand values are re-worded from the evaluator's English text), so tournaments saved before this change render in every language; the save format is unchanged.
 - Chip amounts and points use the language's digit grouping (1,240 · 1240 · 1.240) instead of a space.
 

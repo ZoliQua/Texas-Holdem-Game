@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
-import { useMessages } from '../arcade';
+import { useDental, useMessages } from '../arcade';
 import type { CharacterLook, Species } from '../bots/profiles';
 import type { TellCue } from '../bots/tells';
 import { MESSAGES, type MessageKey } from '../i18n';
+import { OutfitArm, OutfitBody, OutfitHead } from './DentalOutfit';
+import { DENTAL_ROLE, ROLE_KEY } from './dentalOutfits';
 import styles from './Character.module.css';
 
 import type { Pose } from './pose';
@@ -303,6 +305,9 @@ const POSE_KEY: Record<Pose, MessageKey> = {
 
 export function Character({ look, pose, cue, size, className, style }: CharacterProps) {
   const t = useMessages(MESSAGES);
+  const [dental] = useDental();
+  // Dental mode only changes clothes: species, parts and tell animations stay the same.
+  const role = dental ? DENTAL_ROLE[look.species] : null;
   const dark = '#22232b';
   const shellSpecies = look.species === 'tortoise';
   const cls = [styles.char, styles[`pose-${pose}`], cue ? styles[`tell-${cue.kind}`] : '', className ?? ''].filter(Boolean).join(' ');
@@ -315,8 +320,13 @@ export function Character({ look, pose, cue, size, className, style }: Character
       style={{ ...(size > 0 ? { width: size } : null), ...cueStyle, ...style }}
       viewBox="-6 -10 112 114"
       role="img"
-      aria-label={t('charLabel', { species: t(SPECIES_KEY[look.species]), pose: t(POSE_KEY[pose]) })}
+      aria-label={
+        role
+          ? t('charLabelRole', { species: t(SPECIES_KEY[look.species]), role: t(ROLE_KEY[role]), pose: t(POSE_KEY[pose]) })
+          : t('charLabel', { species: t(SPECIES_KEY[look.species]), pose: t(POSE_KEY[pose]) })
+      }
       data-pose={pose}
+      data-outfit={role ?? undefined}
       data-tell={cue?.kind ?? undefined}
     >
       <g className={styles.lean}>
@@ -325,13 +335,16 @@ export function Character({ look, pose, cue, size, className, style }: Character
           {shellSpecies && <ellipse cx="50" cy="92" rx="38" ry="16" fill={look.fur2} stroke={dark} strokeWidth="1.5" />}
           <path d="M18 104 Q18 70 50 70 Q82 70 82 104 Z" fill={look.fur} />
           <path d="M34 104 Q34 80 50 80 Q66 80 66 104 Z" fill={look.species === 'panda' || look.species === 'penguin' ? '#f5f5f5' : look.fur2} opacity=".9" />
+          {role && <OutfitBody role={role} look={look} />}
         </g>
         {/* arms */}
         <g className={styles.armL}>
           <rect x="12" y="74" width="12" height="26" rx="6" fill={look.species === 'panda' ? look.fur2 : look.fur} stroke={dark} strokeOpacity=".25" />
+          {role && <OutfitArm role={role} side="L" />}
         </g>
         <g className={styles.armR}>
           <rect x="76" y="74" width="12" height="26" rx="6" fill={look.species === 'panda' ? look.fur2 : look.fur} stroke={dark} strokeOpacity=".25" />
+          {role && <OutfitArm role={role} side="R" />}
         </g>
         {/* a little chip stack for chipShuffle */}
         <g className={styles.chips}>
@@ -388,7 +401,7 @@ export function Character({ look, pose, cue, size, className, style }: Character
             strokeWidth="2"
             strokeLinecap="round"
           />
-          <Accessory look={look} dark={dark} />
+          {role ? <OutfitHead role={role} pose={pose} /> : <Accessory look={look} dark={dark} />}
         </g>
       </g>
     </svg>

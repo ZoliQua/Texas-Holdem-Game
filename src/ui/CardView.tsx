@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { useMessages } from '../arcade';
+import { Tooth, useDental, useMessages } from '../arcade';
 import { rankLabel, rankOf, suitOf, type Card, type Suit } from '../engine/cards';
 import { MESSAGES } from '../i18n';
 import { cardNameText } from './format';
@@ -62,6 +62,7 @@ export type CardViewProps = {
 /** One playing card: big corner index (readable when overlapped) and a big centre pip. */
 export function CardView({ card, deck, size, highlight = false, faceDown = false, back = '#2b3a7a', className, style }: CardViewProps) {
   const t = useMessages(MESSAGES);
+  const [dental] = useDental();
   const hidden = faceDown || card === null;
   const cls = [styles.card, highlight ? styles.highlight : '', hidden ? styles.down : '', className ?? '']
     .filter(Boolean)
@@ -72,8 +73,20 @@ export function CardView({ card, deck, size, highlight = false, faceDown = false
       <svg className={cls} style={css} viewBox="0 0 100 140" role="img" aria-label={t('cardDown')}>
         <rect x="1.5" y="1.5" width="97" height="137" rx="11" fill={back} stroke="rgba(255,255,255,.7)" strokeWidth="3" />
         <rect x="12" y="12" width="76" height="116" rx="7" fill="none" stroke="rgba(255,255,255,.35)" strokeWidth="2" />
-        <path d="M50 30 L70 70 L50 110 L30 70 Z" fill="none" stroke="rgba(255,255,255,.28)" strokeWidth="2" />
-        <circle cx="50" cy="70" r="9" fill="rgba(255,255,255,.22)" />
+        {dental ? (
+          // Dental mode: a tooth logo in a ring instead of the diamond.
+          <g data-testid="holdem-card-back-tooth">
+            <circle cx="50" cy="70" r="30" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.4)" strokeWidth="2" />
+            <g transform="translate(26 46)">
+              <Tooth size={48} fill="rgba(255,255,255,.92)" stroke="rgba(255,255,255,.55)" />
+            </g>
+          </g>
+        ) : (
+          <g data-testid="holdem-card-back-classic">
+            <path d="M50 30 L70 70 L50 110 L30 70 Z" fill="none" stroke="rgba(255,255,255,.28)" strokeWidth="2" />
+            <circle cx="50" cy="70" r="9" fill="rgba(255,255,255,.22)" />
+          </g>
+        )}
       </svg>
     );
   }

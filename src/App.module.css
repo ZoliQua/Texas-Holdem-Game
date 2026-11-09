@@ -66,6 +66,29 @@
   justify-content: space-between;
 }
 
+.settings .dentalRow {
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  cursor: pointer;
+}
+
+/* A stat value that may wrap onto a second line instead of being cut off. */
+.wrapValue {
+  white-space: normal;
+  line-height: 1.15;
+}
+
+/* Phones: the stat tiles get narrow, so the long next-blinds value is set smaller and labels may wrap too. */
+@media (max-width: 560px) {
+  .wrapValue {
+    font-size: 0.78em;
+  }
+
+  .game :global(.arc-stat dt) {
+    white-space: normal;
+  }
+}
+
 @media (max-width: 980px) {
   .layout {
     grid-template-columns: 1fr;

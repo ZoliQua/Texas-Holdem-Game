@@ -1,5 +1,7 @@
 export type TableTheme = 'neon' | 'classic' | 'luxe';
 export type DeckStyle = 'color' | 'grey';
+/** What the table is drawn as: a chosen theme, or the clinic while dental mode is on (never stored). */
+export type TableLook = TableTheme | 'clinic';
 
 export const TABLE_THEMES: readonly TableTheme[] = ['neon', 'classic', 'luxe'];
 export const DECK_STYLES: readonly DeckStyle[] = ['color', 'grey'];
@@ -69,6 +71,24 @@ export const THEMES: Record<TableTheme, ThemeSpec> = {
     highlight: '#e9c46a',
   },
 };
+
+/** Dental mode: a mint and white clinic table; it replaces the chosen theme only while dental mode is on. */
+export const CLINIC: ThemeSpec = {
+  bg: '#e6f5f0',
+  rail: ['#ffffff', '#d3ece5'],
+  railStroke: '#7fc8b6',
+  felt: ['#e6f7f2', '#bfe6da'],
+  feltLine: 'rgba(42,111,99,.4)',
+  back: '#2a6f63',
+  seat: '#ffffff',
+  seatStroke: '#2a9d8f',
+  text: '#173a34',
+  chips: ['#e5484d', '#3b82f6', '#2a6f63'],
+  glow: null,
+  highlight: '#c2410c',
+};
+
+export const themeSpec = (look: TableLook): ThemeSpec => (look === 'clinic' ? CLINIC : THEMES[look]);
 
 /** Four-colour deck (default) and the one-tone grey deck; suits always differ by shape. */
 export const SUIT_FILL: Record<DeckStyle, Record<'s' | 'h' | 'd' | 'c', string>> = {
