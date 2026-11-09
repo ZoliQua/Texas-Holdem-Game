@@ -4,7 +4,7 @@
 
 * **Repository**: https://github.com/ZoliQua/Texas-Holdem-Game (package `texas-holdem-game`)
 * **Portal**: https://github.com/ZoliQua/Arcade-Game-Center — arcade id **`holdem`**, colour token `--game-holdem`,
-  play URL https://drdul.hu/arcade/#/play/holdem. Once integrated, the same `src/` is mirrored into `Arcade-Game-Center/apps/holdem/`.
+  play URL https://dulzoltan.hu/arcade/#/play/holdem. Once integrated, the same `src/` is mirrored into `Arcade-Game-Center/apps/holdem/`.
 * **Sister games**: Tetris, Snake (the reference implementation), 2048, Pac-Man, Gomoku, Tic-Tac-Toe, Breakout, Space Invaders,
   Connect Four, Nut Sort. The closest template is Connect Four (same shell wiring, persist guard and overlays).
 * **Stack**: React 18.3, Vite 5.4, TypeScript 5.6, CSS Modules on the shared arcade tokens, `vite-node` for the simulation

@@ -4,7 +4,7 @@ No-limit Texas Hold'em tournaments built with **React 18**, **Vite** and **TypeS
 **15 original cartoon bots**, each with a face, a playing style, a strength and a couple of visible tells. An animated SVG table in
 three themes, a colour-blind-friendly deck, call-outs for every action and a full hand log keep a 20–60 minute session easy to follow.
 Runs on its own **and** as one of the eleven games of **[Zoltan's Arcade](https://github.com/ZoliQua/Arcade-Game-Center)** —
-play it at [drdul.hu/arcade/#/play/holdem](https://drdul.hu/arcade/#/play/holdem).
+play it at [dulzoltan.hu/arcade/#/play/holdem](https://dulzoltan.hu/arcade/#/play/holdem).
 
 [![CI](https://github.com/ZoliQua/Texas-Holdem-Game/actions/workflows/ci.yml/badge.svg)](https://github.com/ZoliQua/Texas-Holdem-Game/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-green)
@@ -70,6 +70,8 @@ Every game is a standalone repo that also plugs into the portal. They share one 
 - 📱 **Phone-ready** — an upright table on portrait screens, the log as a drawer with a badge, the action bar pinned to the bottom
 - 💾 **Autosave & resume** — the whole tournament, mid-hand, survives reloads and tab closes
 - 🌗 **Dark / light theme** shared with every arcade game (press **T**)
+- 🌍 **Three languages** — English, Hungarian and German; switch in the top bar or in the settings (also `?lang=en|hu|de` for link hand-off); numbers follow the locale's grouping
+- 🦷 **Dental mode** — a „Fogas mód” / "Dental mode" / „Zahnmodus” toggle in the settings, off by default (or `?dental=1`), shared across the whole arcade: a mint-and-white clinic table style replaces the chosen table theme while it is on, the characters are re-skinned as dental figures that keep their tells, and the card backs carry a tooth logo; presentation only
 - 🤖 **Attract-mode demo** (`<HoldemDemo />`) — six bots play fast hands on the portal's landing page
 - 🧪 **Tested** — the evaluator against all 2 598 960 five-card hands, betting and side-pot rules, 1 000+ random hands for chip
   conservation, anti-cheat, tells, the session guard and the UI
