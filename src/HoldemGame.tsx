@@ -1,14 +1,19 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type CSSProperties } from 'react';
 import {
   clearSession,
+  FinishButton,
   formatClock,
   formatNumber,
+  FullscreenButton,
   gameName,
   GameOverlay,
   KeyHelp,
+  RulesButton,
   SaveBadge,
   StatPanel,
+  TouchHelp,
   useArcadeRun,
+  useImmersive,
   useRestoredSession,
   useRunTimer,
   useKitMessages,
@@ -23,7 +28,7 @@ import type { TellCue } from './bots/tells';
 import { blindsForLevel } from './engine/blinds';
 import { potSize } from './engine/hand';
 import { isHoldemSession } from './game/persist';
-import { tournamentScore } from './game/scoring';
+import { standingPlace, tournamentScore } from './game/scoring';
 import { SPEED_FACTOR } from './game/speed';
 import {
   advance,
@@ -38,6 +43,7 @@ import {
 import { useBotTurns } from './game/useBotTurns';
 import { useHoldemKeys } from './hooks/useHoldemKeys';
 import { MESSAGES, type MessageKey } from './i18n';
+import { useRulesSections } from './rules';
 import { ActionBar, type ActionBarHandle } from './ui/ActionBar';
 import { CharacterCard } from './ui/CharacterCard';
 import { calloutFor, formatChips, ordinal } from './ui/format';
@@ -75,6 +81,13 @@ const KEYS: [string, MessageKey][] = [
   ['P Esc', 'keyPause'],
 ];
 
+const TOUCH_ROWS: [MessageKey, MessageKey][] = [
+  ['touchBar', 'touchBarAction'],
+  ['touchSlider', 'touchSliderAction'],
+  ['touchPreset', 'touchPresetAction'],
+  ['touchSeat', 'touchSeatAction'],
+];
+
 const newSeed = () => (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
 
 export function HoldemGame(props: ArcadeGameProps = {}) {
@@ -105,15 +118,21 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
   const settings = useSettings();
   const factor = SPEED_FACTOR[settings.speed];
   const bar = useRef<ActionBarHandle>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const immersive = useImmersive(rootRef);
+  const rulesSections = useRulesSections(settings.deck);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  // The Finish confirm is open: bots, animations and the clock wait without leaving `running`.
+  const [finishOpen, setFinishOpen] = useState(false);
 
   const finished = game.phase === 'finished';
   const status: ArcadeStatus = ui === 'idle' ? 'idle' : finished ? 'gameOver' : ui === 'paused' ? 'paused' : 'running';
   const running = status === 'running';
-  const dialogOpen = confirmNew || openChar !== null;
+  const dialogOpen = confirmNew || openChar !== null || rulesOpen || finishOpen;
   const place = game.playerPlace;
   const score = finished && place !== null ? tournamentScore({ difficulty: game.setup.difficulty, format: game.setup.format, place }) : 0;
 
-  const seconds = useRunTimer(running, runKey, runKey === 0 && resumable ? (restored?.seconds ?? 0) : 0);
+  const seconds = useRunTimer(running && !finishOpen, runKey, runKey === 0 && resumable ? (restored?.seconds ?? 0) : 0);
 
   const stats = useArcadeRun({
     gameId: 'holdem',
@@ -121,7 +140,7 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
     score,
     seconds,
     runKey,
-    outcome: () => (place === 1 ? 'win' : 'loss'),
+    outcome: () => (game.finishedEarly ? 'finished' : place === 1 ? 'win' : 'loss'),
     props,
   });
 
@@ -160,9 +179,14 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
       setShowResult(false);
       return;
     }
+    // Finished on purpose: nothing is sliding, the card shows at once.
+    if (game.finishedEarly) {
+      setShowResult(true);
+      return;
+    }
     const id = window.setTimeout(() => setShowResult(true), RESULT_DELAY_MS * Math.max(0.5, factor));
     return () => window.clearTimeout(id);
-  }, [finished, factor]);
+  }, [finished, factor, game.finishedEarly]);
 
   const onCue = useCallback((id: string, cue: TellCue | null) => setCues((c) => ({ ...c, [id]: cue })), []);
   useBotTurns({ state: game, dispatch, paused, speed: settings.speed, onCue, onTurn: setTurn });
@@ -228,6 +252,17 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
     setUi('idle');
   }, []);
 
+  const onRulesOpen = useCallback((open: boolean) => {
+    setRulesOpen(open);
+    if (open) setUi((p) => (p === 'live' ? 'paused' : p));
+  }, []);
+
+  const finishEarly = useCallback(() => {
+    setWelcomeBack(false);
+    setOpenChar(null);
+    dispatch({ type: 'finish' });
+  }, []);
+
   const requestNew = useCallback(() => {
     if (finished || ui === 'idle') toSetup();
     else setConfirmNew(true);
@@ -238,8 +273,13 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
 
   useHoldemKeys({
     dialog: dialogOpen,
-    onDialogConfirm: () => (confirmNew ? toSetup() : setOpenChar(null)),
+    onDialogConfirm: () => {
+      if (rulesOpen || finishOpen) return;
+      if (confirmNew) toSetup();
+      else setOpenChar(null);
+    },
     onDialogCancel: () => {
+      // The Rules dialog and the Finish confirm handle their own Escape.
       setConfirmNew(false);
       setOpenChar(null);
     },
@@ -280,6 +320,11 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
     return out;
   }, [callouts, lang]);
   const keyRows = useMemo(() => KEYS.map(([keys, action]): [string, string] => [keys, tr(action)]), [tr]);
+  const touchRows = useMemo(() => TOUCH_ROWS.map(([gesture, action]): [string, string] => [tr(gesture), tr(action)]), [tr]);
+  // What Finish would rank right now: the points of the player's current place among the players still in.
+  const finishScore = inTournament
+    ? tournamentScore({ difficulty: game.setup.difficulty, format: game.setup.format, place: standingPlace(t.players, PLAYER_ID) })
+    : 0;
   const openProfile = openChar ? (game.bots.find((b) => b.id === openChar) ?? null) : null;
   const best = Math.max(stats.best, score);
   const newBest = score > 0 && score > stats.bestBeforeRun;
@@ -320,10 +365,11 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
           ],
         };
   } else if (status === 'gameOver' && showResult && place !== null) {
-    const won = place === 1;
+    const won = place === 1 && !game.finishedEarly;
     overlay = {
-      title: won ? tr('wonTitle') : tr('finishedTitle', { ord: ordinal(place, lang), n: place }),
+      title: game.finishedEarly ? k('finishedEarly') : won ? tr('wonTitle') : tr('finishedTitle', { ord: ordinal(place, lang), n: place }),
       message:
+        (game.finishedEarly ? `${tr('finishedEarlyRank', { ord: ordinal(place, lang) })} · ` : '') +
         (score > 0 ? tr('resultPoints', { points: formatChips(score, lang) }) : tr('resultNoPoints')) +
         tr('resultTail', { hands: formatNumber(t.handNo, lang), time: formatClock(seconds), best: formatChips(best, lang) }) +
         (newBest ? tr('newBestSuffix') : ''),
@@ -335,7 +381,7 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
   const style = { '--game-color': 'var(--game-holdem)' } as CSSProperties;
 
   return (
-    <div className={`arc-game ${styles.game}`} style={style}>
+    <div ref={rootRef} className={`arc-game ${styles.game}`} style={style}>
       {!embedded && (
         <header className="arc-game__head">
           <div>
@@ -376,7 +422,7 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
 
       <div className={styles.layout}>
         <div className={styles.main}>
-          <div className={`arc-game__board ${styles.tableWrap}`}>
+          <div className={`arc-game__board arc-board-tap ${styles.tableWrap}`}>
             <Table
               state={game}
               theme={settings.table}
@@ -419,6 +465,11 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
                 {tr('newTournament')}
               </button>
             </div>
+            <div className={styles.tools}>
+              <RulesButton sections={rulesSections} gameId="holdem" onOpenChange={onRulesOpen} hotkey={false} />
+              <FinishButton score={finishScore} visible={ui !== 'idle' && inTournament} onFinish={finishEarly} onOpenChange={setFinishOpen} />
+              <FullscreenButton immersive={immersive} />
+            </div>
             {inTournament && (
               <p className={styles.note}>
                 {tr('tournamentNote', {
@@ -444,6 +495,7 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
           <section className="arc-panel">
             <h2 className="arc-panel__title">{tr('panelKeys')}</h2>
             <KeyHelp rows={keyRows} />
+            <TouchHelp rows={touchRows} />
           </section>
         </aside>
       </div>

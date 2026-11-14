@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { useLang, useMessages } from '../arcade';
+import { useIsTouch, useLang, useMessages } from '../arcade';
 import type { Action, LegalActions } from '../engine/types';
 import { MESSAGES, type MessageKey } from '../i18n';
 import { formatChips } from './format';
@@ -40,6 +40,9 @@ const PRESETS: { label: MessageKey; f: number | 'min' | 'max' }[] = [
 export const ActionBar = forwardRef<ActionBarHandle, ActionBarProps>(function ActionBar({ legal, pot, betTo, bb, onAction }, ref) {
   const t = useMessages(MESSAGES);
   const [lang] = useLang();
+  // On a phone the bar is the bottom bar: no key hints, thumb-sized controls (see the coarse-pointer CSS).
+  const touch = useIsTouch();
+  const kbd = (k: string) => (touch ? null : <kbd className="arc-kbd">{k}</kbd>);
   const canRaise = legal !== null && legal.minRaiseTo !== null;
   const min = legal?.minRaiseTo ?? 0;
   const max = legal?.maxRaiseTo ?? 0;
@@ -83,24 +86,24 @@ export const ActionBar = forwardRef<ActionBarHandle, ActionBarProps>(function Ac
 
   const disabled = legal === null;
   return (
-    <div className={styles.bar} role="group" aria-label={t('abGroup')} aria-disabled={disabled}>
+    <div className={styles.bar} role="group" aria-label={t('abGroup')} aria-disabled={disabled} data-touch={touch}>
       <div className={styles.main}>
         <button type="button" className={`arc-btn ${styles.fold}`} onClick={fold} disabled={disabled}>
-          {t('abFold')} <kbd className="arc-kbd">F</kbd>
+          {t('abFold')} {kbd('F')}
         </button>
         <button type="button" className={`arc-btn ${styles.call}`} onClick={checkOrCall} disabled={disabled}>
           {legal?.canCheck || !legal ? t('abCheck') : t('abCallN', { n: formatChips(legal.callAmount, lang) })}{' '}
-          <kbd className="arc-kbd">C</kbd>
+          {kbd('C')}
         </button>
         <button type="button" className={`arc-btn arc-btn--primary ${styles.raise}`} onClick={confirm} disabled={disabled || !canRaise}>
-          {canRaise ? raiseLabel : bet ? t('abBet') : t('abRaise')} <kbd className="arc-kbd">Enter</kbd>
+          {canRaise ? raiseLabel : bet ? t('abBet') : t('abRaise')} {kbd('Enter')}
         </button>
       </div>
       <div className={styles.sizing}>
         <label className={styles.slider}>
           <span className={styles.sliderLabel}>
-            {bet ? t('abBet') : t('abRaiseTo')} <kbd className="arc-kbd">R</kbd> <kbd className="arc-kbd">←</kbd>
-            <kbd className="arc-kbd">→</kbd>
+            {bet ? t('abBet') : t('abRaiseTo')} {kbd('R')} {kbd('←')}
+            {kbd('→')}
           </span>
           <input
             ref={slider}
@@ -137,7 +140,7 @@ export const ActionBar = forwardRef<ActionBarHandle, ActionBarProps>(function Ac
               onClick={() => legal && setAmount(presetAmount(p.f, legal, pot, betTo))}
             >
               {t(p.label)}
-              {p.f === 'max' && <kbd className="arc-kbd">A</kbd>}
+              {p.f === 'max' && kbd('A')}
             </button>
           ))}
         </div>

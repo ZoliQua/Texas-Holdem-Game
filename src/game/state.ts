@@ -4,6 +4,7 @@ import { tellFor, thinkingMs, type TellCue } from '../bots/tells';
 import { toBotView } from '../bots/view';
 import { applyAction, legalActions, startHand } from '../engine/hand';
 import { makeRng } from '../engine/rng';
+import { standingPlace } from './scoring';
 import { DEFAULT_LENGTH, handsPerLevel, type Format, type LengthMin } from '../engine/schedule';
 import { addHandStats, type PlayerStats } from '../engine/stats';
 import { isTournamentOver, newTournament } from '../engine/tournament';
@@ -37,6 +38,8 @@ export type GameState = {
   pending: number | null;
   /** Counter behind `pending`. */
   nonce: number;
+  /** The player ended the run with Finish: placed by chips among the players still in. */
+  finishedEarly?: boolean;
 };
 
 export type GameAction =
@@ -45,6 +48,7 @@ export type GameAction =
   | { type: 'bot'; id: string; action: Action }
   | { type: 'settle'; nonce: number }
   | { type: 'nextHand' }
+  | { type: 'finish' }
   | { type: 'newTournament' };
 
 /** A table with no players: the placeholder while the setup screen is shown. */
@@ -141,6 +145,10 @@ export function advance(s: GameState, a: GameAction): GameState {
       const table = startHand(s.table);
       return { ...s, table, phase: 'playing', pending: null, log: withLog(s.log, table, true) };
     }
+    case 'finish':
+      // Ends the whole tournament now; the current hand is not played out.
+      if (s.phase !== 'playing' && s.phase !== 'handOver') return s;
+      return { ...s, phase: 'finished', playerPlace: standingPlace(s.table.players, PLAYER_ID), finishedEarly: true, pending: null };
     case 'newTournament':
       return createInitialState(s.setup);
   }

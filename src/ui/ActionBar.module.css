@@ -118,3 +118,46 @@
     display: none;
   }
 }
+
+/* Touch (phones, tablets): the bar is the thumb-reach bottom bar with finger-sized controls. */
+@media (pointer: coarse) {
+  .bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    gap: 8px;
+    padding-top: 8px;
+    touch-action: manipulation;
+  }
+
+  .main > button {
+    min-height: 52px;
+  }
+
+  /* The slider keeps its aria-label and the raise button shows the amount: the caption only costs height here. */
+  .sliderLabel {
+    display: none;
+  }
+
+  .sizing {
+    grid-template-columns: 1fr;
+  }
+
+  .slider input {
+    min-height: 44px;
+    margin: 0;
+  }
+
+  .presets {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .preset {
+    min-height: 44px;
+    padding: 6px 2px;
+    justify-content: center;
+  }
+}

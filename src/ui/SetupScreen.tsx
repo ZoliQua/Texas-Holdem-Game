@@ -1,5 +1,6 @@
 import { formatNumber, useLang, useMessages } from '../arcade';
 import type { Difficulty } from '../bots/profiles';
+import { STARTING_STACK } from '../engine/tournament';
 import { expectedMinutes, LENGTHS, type Format, type LengthMin } from '../engine/schedule';
 import { BASE_POINTS, HEADS_UP_WIN_SHARE } from '../game/scoring';
 import type { Setup } from '../game/state';
@@ -61,7 +62,7 @@ export function SetupScreen({ value: setup, onChange: setSetup, onStart }: { val
         </p>
       </fieldset>
       <p className={styles.score}>
-        {t('scoreBefore', { n: formatNumber(1500, lang) })}
+        {t('scoreBefore', { n: formatNumber(STARTING_STACK, lang) })}
         <strong>{formatNumber(win, lang)}</strong>
         {t('scoreAfter')}
       </p>
