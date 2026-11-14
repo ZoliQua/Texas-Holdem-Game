@@ -3,7 +3,7 @@
 No-limit Texas Hold'em tournaments built with **React 18**, **Vite** and **TypeScript** — a heads-up or 6-max sit & go against
 **15 original cartoon bots**, each with a face, a playing style, a strength and a couple of visible tells. An animated SVG table in
 three themes, a colour-blind-friendly deck, call-outs for every action and a full hand log keep a 20–60 minute session easy to follow.
-Runs on its own **and** as one of the eleven games of **[Zoltan's Arcade](https://github.com/ZoliQua/Arcade-Game-Center)** —
+Runs on its own **and** as one of the fourteen games of **[Zoltan's Arcade](https://github.com/ZoliQua/Arcade-Game-Center)** —
 play it at [dulzoltan.hu/arcade/#/play/holdem](https://dulzoltan.hu/arcade/#/play/holdem).
 
 [![CI](https://github.com/ZoliQua/Texas-Holdem-Game/actions/workflows/ci.yml/badge.svg)](https://github.com/ZoliQua/Texas-Holdem-Game/actions/workflows/ci.yml)
@@ -52,6 +52,9 @@ Every game is a standalone repo that also plugs into the portal. They share one 
 | 🔴 Connect Four | [Connect-Four-Game](https://github.com/ZoliQua/Connect-Four-Game) | Duel |
 | 🔩 Nut Sort | [Nut-Sort-Game](https://github.com/ZoliQua/Nut-Sort-Game) | Sorting |
 | 🃏 **Texas Hold'em** (this repo) | [Texas-Holdem-Game](https://github.com/ZoliQua/Texas-Holdem-Game) | Cards |
+| 💣 Minesweeper | [Minesweeper-Game](https://github.com/ZoliQua/Minesweeper-Game) | Logic |
+| ♠️ Solitaire | [Solitaire-Game](https://github.com/ZoliQua/Solitaire-Game) | Cards |
+| 🎴 Ulti | [Ulti-Game](https://github.com/ZoliQua/Ulti-Game) | Cards |
 
 ## ✨ Features
 
