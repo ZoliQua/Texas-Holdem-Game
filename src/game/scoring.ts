@@ -1,6 +1,6 @@
 import type { Difficulty } from '../bots/profiles';
 import type { Format } from '../engine/schedule';
-import type { PlayerState } from '../engine/types';
+import type { PlayerState, TableState } from '../engine/types';
 
 /** Points for a tournament; difficulty and placement count, speed does not. */
 export const BASE_POINTS: Record<Difficulty, number> = { easy: 1000, medium: 2500, hard: 5000 };
@@ -16,14 +16,28 @@ export function tournamentScore(o: { difficulty: Difficulty; format: Format; pla
   return Math.round(base * share);
 }
 
+/** Finish ranks a place only after this many completed hands; before that it ranks 0 (no free 1st place from Deal → Finish). */
+export const MIN_FINISH_HANDS = 10;
+
+/** Hands already played to the end: the current hand counts once it is over. */
+export function completedHands(t: Pick<TableState, 'handNo' | 'street'>): number {
+  return t.street === 'done' ? t.handNo : Math.max(0, t.handNo - 1);
+}
+
 /**
- * The place `id` holds right now among the players still in: one plus the number of them with more
- * chips (stack + chips already put in this hand, i.e. the stacks as they stood before the current
- * hand). Equal stacks share the better place; busted players already rank below everybody still in.
+ * The place `id` holds right now among the players still in: the number of them (`id` included) with at
+ * least as many chips — stack + chips already put in this hand, i.e. the stacks as they stood at the start of
+ * the current hand. Equal stacks take the worse place; busted players already rank below everybody still in.
  */
 export function standingPlace(players: readonly PlayerState[], id: string): number {
   const chips = (p: PlayerState) => p.stack + p.committed;
   const me = players.find((p) => p.id === id);
   if (!me) return players.length;
-  return 1 + players.filter((p) => !p.out && p.id !== id && chips(p) > chips(me)).length;
+  return players.filter((p) => !p.out && (p.id === id || chips(p) >= chips(me))).length;
+}
+
+/** What Finish ranks right now: the standing place's points once MIN_FINISH_HANDS hands are completed, else 0. */
+export function finishScore(o: { difficulty: Difficulty; format: Format; table: TableState }, id: string): number {
+  if (completedHands(o.table) < MIN_FINISH_HANDS) return 0;
+  return tournamentScore({ difficulty: o.difficulty, format: o.format, place: standingPlace(o.table.players, id) });
 }

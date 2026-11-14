@@ -111,3 +111,39 @@
   gap: 8px;
   margin-top: 10px;
 }
+
+/* ── Touch screens ─────────────────────────────────────────── */
+@media (pointer: coarse) {
+  /* Full screen on a phone keeps the table, the bar and the panels; the title and stat tiles give way. */
+  .game:global(.arc-immersive) :global(.arc-game__head),
+  .game:global(.arc-fullscreen) :global(.arc-game__head),
+  .game:global(.arc-immersive) :global(.arc-stats),
+  .game:global(.arc-fullscreen) :global(.arc-stats) {
+    display: none;
+  }
+}
+
+/* Phones upright: the table (portrait shape, 360 × 580 units) gets the height a sticky page header and the
+   action bar leave over (--holdem-fit-h / --holdem-bar-h are measured by HoldemGame), so your cards, the
+   board and the bar are on one screen. */
+@media (pointer: coarse) and (max-width: 600px) {
+  .tableWrap {
+    max-width: calc((var(--holdem-fit-h, 100dvh) - var(--holdem-bar-h, 170px) - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 360 / 580);
+    margin-inline: auto;
+  }
+}
+
+/* Phones sideways: table left (wide shape, 640 × 420 units), compact action bar right. */
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 560px) {
+  .main[data-phone-landscape='true'] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(200px, 32%);
+    align-items: start;
+    gap: 8px;
+  }
+
+  .main[data-phone-landscape='true'] .tableWrap {
+    max-width: calc((var(--holdem-fit-h, 100dvh) - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 640 / 420);
+    margin-inline: auto;
+  }
+}

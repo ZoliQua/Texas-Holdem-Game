@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { applyDental, applyLang, formatNumber, loadSession, saveSession } from './arcade';
 import { STARTING_STACK } from './engine/tournament';
-import { standingPlace, tournamentScore } from './game/scoring';
+import { completedHands, MIN_FINISH_HANDS, standingPlace, tournamentScore } from './game/scoring';
 import { advance, isPlayerTurn, PLAYER_ID, type GameState } from './game/state';
 import { riggedSixMax } from './game/testkit';
 import { HoldemGame, SESSION_SCHEMA } from './HoldemGame';
@@ -27,9 +27,10 @@ const confirmText = () => {
 const save = (data: GameState) => saveSession('holdem', { schema: SESSION_SCHEMA, data, seconds: 42, score: 0 });
 const medium = (place: number) => tournamentScore({ difficulty: 'medium', format: 'sixMax', place });
 
-/** Restores the rigged table and resumes it (the player is first to act). */
-function resume(stacks: number[]) {
-  const s = riggedSixMax(stacks);
+/** Restores the rigged table (by default with enough hands behind it to rank a place) and resumes it; the player acts first. */
+function resume(stacks: number[], handsPlayed = MIN_FINISH_HANDS) {
+  const s = riggedSixMax(stacks, { handsPlayed });
+  expect(completedHands(s.table)).toBe(handsPlayed);
   expect(isPlayerTurn(s)).toBe(true);
   expect(stacks.reduce((a, b) => a + b, 0)).toBe(6 * STARTING_STACK);
   save(s);
@@ -41,14 +42,24 @@ function resume(stacks: number[]) {
 }
 
 describe('standingPlace', () => {
-  it('counts the players still in with more chips (stack + chips already in the pot); ties share the better place', () => {
+  it('counts the players still in with at least as many chips (stack + chips already in the pot): ties take the worse place', () => {
     const s = riggedSixMax([1000, 2600, 2400, 800, 1100, 1100]);
     expect(standingPlace(s.table.players, PLAYER_ID)).toBe(5);
-    expect(standingPlace(s.table.players, s.table.players[4].id)).toBe(3);
-    expect(standingPlace(s.table.players, s.table.players[5].id)).toBe(3);
+    expect(standingPlace(s.table.players, s.table.players[4].id)).toBe(4);
+    expect(standingPlace(s.table.players, s.table.players[5].id)).toBe(4);
+    // A fresh deal: everybody still has the starting stack (blinds count as theirs), so all six tie for 6th.
+    const fresh = riggedSixMax([1500, 1500, 1500, 1500, 1500, 1500]);
+    expect(standingPlace(fresh.table.players, PLAYER_ID)).toBe(6);
     // Busted players are already placed below everybody still in.
     const out = s.table.players.map((p, i) => (i === 1 ? { ...p, stack: 0, committed: 0, out: true } : p));
     expect(standingPlace(out, PLAYER_ID)).toBe(4);
+  });
+
+  it('a hand counts as completed once it is over', () => {
+    const s = riggedSixMax([1000, 2600, 2400, 800, 1100, 1100], { handsPlayed: 4 });
+    expect(completedHands(s.table)).toBe(4);
+    expect(completedHands({ ...s.table, street: 'done' })).toBe(5);
+    expect(MIN_FINISH_HANDS).toBe(10);
   });
 
   it('the reducer ends the run on the standing place and marks it finished early', () => {
@@ -88,7 +99,7 @@ describe('Hold’em finish early', () => {
     expect(finishBtn()).toBeNull();
   });
 
-  it('the chip leader gets the winner’s points', () => {
+  it('after the minimum number of hands the chip leader gets the winner’s points', () => {
     const { onGameOver } = resume([3000, 1200, 1200, 1200, 1200, 1200]);
     fireEvent.click(finishBtn()!);
     fireEvent.click(screen.getByRole('button', { name: 'Befejezem' }));
@@ -103,6 +114,44 @@ describe('Hold’em finish early', () => {
     expect(screen.getByRole('alertdialog').textContent).toContain('0 pont kerül a ranglistára');
     fireEvent.click(screen.getByRole('button', { name: 'Befejezem' }));
     expect(onGameOver).toHaveBeenCalledTimes(1);
+    expect(onGameOver).toHaveBeenCalledWith(0, { finished: true });
+  });
+
+  it('a tie with the leader takes the worse place', () => {
+    // The player and seat 1 both have 2,000: they tie for 1st and 2nd, so the player is 2nd.
+    const { onGameOver } = resume([2000, 2000, 1250, 1250, 1250, 1250]);
+    expect(medium(2)).toBe(1500);
+    fireEvent.click(finishBtn()!);
+    expect(confirmText()).toBe(`Befejezed a játékot? ${formatNumber(medium(2), 'hu')} pont kerül a ranglistára.`);
+    fireEvent.click(screen.getByRole('button', { name: 'Befejezem' }));
+    expect(onGameOver).toHaveBeenCalledWith(medium(2), { finished: true });
+  });
+
+  it('Deal → Finish ranks 0 (even as the chip leader) until enough hands are completed', () => {
+    const { onGameOver } = resume([3000, 1200, 1200, 1200, 1200, 1200], 0);
+    fireEvent.click(finishBtn()!);
+    expect(confirmText()).toBe('Befejezed a játékot? 0 pont kerül a ranglistára.');
+    fireEvent.click(screen.getByRole('button', { name: 'Befejezem' }));
+    expect(onGameOver).toHaveBeenCalledTimes(1);
+    expect(onGameOver).toHaveBeenCalledWith(0, { finished: true });
+    const card = screen.getByRole('dialog', { name: 'Idő előtt befejezve' });
+    expect(card.textContent).toContain(`${formatNumber(MIN_FINISH_HANDS, 'hu')} leosztásnál kevesebb ment le: nincs helyezési pont`);
+  });
+
+  it('one hand short of the minimum still ranks 0; at the minimum the place share applies', () => {
+    const { onGameOver } = resume([3000, 1200, 1200, 1200, 1200, 1200], MIN_FINISH_HANDS - 1);
+    fireEvent.click(finishBtn()!);
+    fireEvent.click(screen.getByRole('button', { name: 'Befejezem' }));
+    expect(onGameOver).toHaveBeenCalledWith(0, { finished: true });
+  });
+
+  it('a fresh 6-max deal finished at once is 0 for everybody (no free 1st place)', () => {
+    applyLang('en', { silent: true });
+    const onGameOver = vi.fn();
+    render(<HoldemGame onGameOver={onGameOver} />);
+    fireEvent.click(screen.getByRole('button', { name: /Deal me in/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Finish' }));
     expect(onGameOver).toHaveBeenCalledWith(0, { finished: true });
   });
 
@@ -129,6 +178,6 @@ describe('Hold’em finish early', () => {
     tick(30_000);
     expect(screen.getByRole('region', { name: /napló/i }).textContent).toBe(log);
     expect(screen.getByText('Idő').parentElement!.textContent).toBe(clock);
-    expect(s.table.handNo).toBe(1);
+    expect(s.table.handNo).toBe(MIN_FINISH_HANDS + 1);
   });
 });

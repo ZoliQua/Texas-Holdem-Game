@@ -3,7 +3,7 @@ import { formatNumber, Tooth, useDental, useIsTouch, useKitMessages, useLang, us
 import type { Difficulty } from './bots/profiles';
 import { rankLabel, rankOf, suitOf, type Card } from './engine/cards';
 import { STARTING_STACK } from './engine/tournament';
-import { SIX_MAX_SHARES, tournamentScore } from './game/scoring';
+import { MIN_FINISH_HANDS, SIX_MAX_SHARES, tournamentScore } from './game/scoring';
 import { MESSAGES, type MessageKey } from './i18n';
 import { SuitShape } from './ui/CardView';
 import { ordinal } from './ui/format';
@@ -36,7 +36,7 @@ function MiniCard({ card, x, y, kicker, deck }: { card: Card; x: number; y: numb
         rx={3}
         fill="#fbfbf7"
         stroke={kicker ? 'rgba(0,0,0,.55)' : '#111'}
-        strokeWidth={kicker ? 1 : 1.8}
+        strokeWidth={kicker ? 1.2 : 1.8}
         strokeDasharray={kicker ? '2.5 2' : undefined}
       />
       <text x={x + 3} y={top + 11} fontSize={rankOf(card) === 10 ? 8.5 : 10} fontWeight={800} fill={fill} fontFamily="ui-sans-serif, system-ui, sans-serif">
@@ -151,7 +151,7 @@ export function useRulesSections(deck: DeckStyle = 'color'): RulesSection[] {
             </li>
           </ul>
           <p>{m('rulesScoringMax', { max: num(max) })}</p>
-          <p>{m('rulesScoringFinish')}</p>
+          <p>{m('rulesScoringFinish', { hands: num(MIN_FINISH_HANDS), none: num(0) })}</p>
         </>
       ),
     },

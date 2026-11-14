@@ -1,9 +1,10 @@
 import { vi } from 'vitest';
 
-/** Makes `(pointer: coarse)` match (or not) in jsdom; call before rendering. */
-export function setCoarsePointer(coarse: boolean): void {
+/** Makes `(pointer: coarse)` match (or not) in jsdom, optionally on a landscape phone; call before rendering. */
+export function setCoarsePointer(coarse: boolean, o: { landscape?: boolean } = {}): void {
   vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: coarse && query.includes('coarse'),
+    // Queries that also ask for a landscape screen match only when `landscape` is set.
+    matches: coarse && query.includes('coarse') && (!query.includes('landscape') || (o.landscape ?? false)),
     media: query,
     onchange: null,
     addEventListener: () => {},

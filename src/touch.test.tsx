@@ -20,6 +20,7 @@ afterEach(() => {
 });
 
 const actionBarCss = readFileSync(resolve(process.cwd(), 'src/ui/ActionBar.module.css'), 'utf8');
+const appCss = readFileSync(resolve(process.cwd(), 'src/App.module.css'), 'utf8');
 const tick = (ms: number) => act(() => vi.advanceTimersByTime(ms));
 const touch = { pointerId: 1, pointerType: 'touch', button: 0 };
 /** A finger tap: pointer down / up with pointerType touch, then the click the browser sends. */
@@ -41,7 +42,7 @@ function resume() {
 }
 
 describe('Hold’em touch controls', () => {
-  it('the action buttons sit in the bottom bar after the table, without key hints', () => {
+  it('the action buttons sit in the bar after the table, without key hints', () => {
     const { container } = resume();
     const b = bar();
     expect(b.dataset.touch).toBe('true');
@@ -51,12 +52,51 @@ describe('Hold’em touch controls', () => {
     expect(b.querySelectorAll('kbd')).toHaveLength(0);
   });
 
-  it('the bottom bar and its slider are thumb-sized on coarse pointers (≥ 44 px)', () => {
+  it('the action bar is thumb-sized on coarse pointers and never floats over the table', () => {
     const coarse = actionBarCss.slice(actionBarCss.indexOf('@media (pointer: coarse)'));
     expect(coarse).toMatch(/\.slider input \{[^}]*min-height: 44px/);
     expect(coarse).toMatch(/\.preset \{[^}]*min-height: 44px/);
-    expect(coarse).toMatch(/\.bar \{[^}]*position: sticky;[^}]*bottom: 0/);
+    // Presets in one row; the bar stays in the flow under the table (no sticky overlay on your seat).
+    expect(coarse).toMatch(/\.presets \{[^}]*grid-template-columns: repeat\(5, 1fr\)/);
+    expect(coarse).toMatch(/\.bar \{[^}]*position: static/);
     expect(coarse).toMatch(/safe-area-inset-bottom/);
+    // Landscape phones: a narrow column beside the table, buttons stacked.
+    const land = actionBarCss.slice(actionBarCss.indexOf('@media (pointer: coarse) and (orientation: landscape)'));
+    expect(land).toMatch(/\.main \{[^}]*grid-template-columns: 1fr/);
+  });
+
+  it('the table is capped to the screen height left over by the action bar (portrait) or beside it (landscape)', () => {
+    const coarse = appCss.slice(appCss.indexOf('@media (pointer: coarse)'));
+    expect(coarse).toMatch(/\.tableWrap \{[^}]*max-width: calc\(\(var\(--holdem-fit-h, 100dvh\) - var\(--holdem-bar-h, 170px\)/);
+    const land = appCss.slice(appCss.indexOf('@media (pointer: coarse) and (orientation: landscape)'));
+    expect(land).toMatch(/\.main\[data-phone-landscape='true'\] \{[^}]*grid-template-columns:/);
+    // Full screen on a phone keeps only the table, the bar and the panels: no title or stat tiles.
+    expect(coarse).toMatch(/\.game:global\(\.arc-immersive\) :global\(\.arc-game__head\)/);
+    expect(coarse).toMatch(/:global\(\.arc-stats\)[^{]*\{[^}]*display: none/);
+  });
+
+  it('measures the screen for the table and scrolls table + bar into view when the deal starts', () => {
+    const scroll = vi.fn();
+    Element.prototype.scrollIntoView = scroll;
+    const { container } = render(<HoldemGame />);
+    fireEvent.click(screen.getByRole('button', { name: /Deal me in/ }));
+    const root = container.querySelector('.arc-game') as HTMLElement;
+    expect(root.style.getPropertyValue('--holdem-fit-h')).toBe(`${window.innerHeight}px`);
+    expect(root.style.getPropertyValue('--holdem-bar-h')).toMatch(/px$/);
+    expect(scroll).toHaveBeenCalledWith(expect.objectContaining({ block: 'end' }));
+    expect(scroll.mock.contexts.at(-1)).toBe(container.querySelector('[data-phone-landscape]'));
+  });
+
+  it('a landscape phone puts the table and the bar side by side, the table in its wide shape', () => {
+    setCoarsePointer(true, { landscape: true });
+    const { container } = resume();
+    expect(container.querySelector('[data-phone-landscape]')!.getAttribute('data-phone-landscape')).toBe('true');
+    expect(container.querySelector('[data-orientation]')!.getAttribute('data-orientation')).toBe('landscape');
+  });
+
+  it('a portrait phone keeps the table above the bar', () => {
+    const { container } = resume();
+    expect(container.querySelector('[data-phone-landscape]')!.getAttribute('data-phone-landscape')).toBe('false');
   });
 
   it('tapping Fold folds', () => {
@@ -98,7 +138,7 @@ describe('Hold’em touch controls', () => {
 
   it('shows touch help instead of the key list', () => {
     resume();
-    expect(screen.getByRole('list', { name: 'Touch controls' }).textContent).toContain('Bottom bar');
+    expect(screen.getByRole('list', { name: 'Touch controls' }).textContent).toContain('Action bar');
     expect(screen.queryByText('Focus the raise slider')).toBeNull();
   });
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState, type CSSProperties } from 'react';
 import {
   clearSession,
   FinishButton,
@@ -14,6 +14,7 @@ import {
   TouchHelp,
   useArcadeRun,
   useImmersive,
+  useIsTouch,
   useRestoredSession,
   useRunTimer,
   useKitMessages,
@@ -28,7 +29,7 @@ import type { TellCue } from './bots/tells';
 import { blindsForLevel } from './engine/blinds';
 import { potSize } from './engine/hand';
 import { isHoldemSession } from './game/persist';
-import { standingPlace, tournamentScore } from './game/scoring';
+import { completedHands, finishScore as finishScoreOf, MIN_FINISH_HANDS, tournamentScore } from './game/scoring';
 import { SPEED_FACTOR } from './game/speed';
 import {
   advance,
@@ -52,6 +53,7 @@ import { LogPanel } from './ui/LogPanel';
 import { SettingsPanel } from './ui/SettingsPanel';
 import { SetupScreen } from './ui/SetupScreen';
 import { Table } from './ui/Table';
+import { PHONE_LANDSCAPE, useMediaQuery } from './ui/useMediaQuery';
 import { useSettings } from './ui/useSettings';
 import type { Action, LogEvent } from './engine/types';
 import styles from './App.module.css';
@@ -120,6 +122,9 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
   const bar = useRef<ActionBarHandle>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const immersive = useImmersive(rootRef);
+  const mainRef = useRef<HTMLDivElement>(null);
+  const touch = useIsTouch();
+  const phoneLandscape = useMediaQuery(PHONE_LANDSCAPE);
   const rulesSections = useRulesSections(settings.deck);
   const [rulesOpen, setRulesOpen] = useState(false);
   // The Finish confirm is open: bots, animations and the clock wait without leaving `running`.
@@ -130,7 +135,12 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
   const running = status === 'running';
   const dialogOpen = confirmNew || openChar !== null || rulesOpen || finishOpen;
   const place = game.playerPlace;
-  const score = finished && place !== null ? tournamentScore({ difficulty: game.setup.difficulty, format: game.setup.format, place }) : 0;
+  const score =
+    finished && place !== null
+      ? game.finishedEarly
+        ? finishScoreOf({ ...game.setup, table: game.table }, PLAYER_ID)
+        : tournamentScore({ difficulty: game.setup.difficulty, format: game.setup.format, place })
+      : 0;
 
   const seconds = useRunTimer(running && !finishOpen, runKey, runKey === 0 && resumable ? (restored?.seconds ?? 0) : 0);
 
@@ -225,6 +235,45 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, [running]);
+
+  // ── Phone fit ───────────────────────────────────────────────
+  // On touch screens the table is capped (CSS) to the height left over by a sticky page header and the
+  // action bar, so your cards, the board and the bar fit on one screen. The two numbers come from here.
+  const inPlay = inTournament || finished;
+  const immersiveOn = immersive.active;
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!touch || !root) return;
+    const measure = () => {
+      let top = 0;
+      const header = immersiveOn ? null : document.querySelector('.arc-topbar');
+      if (header) {
+        const cs = window.getComputedStyle(header);
+        if ((cs.position === 'sticky' || cs.position === 'fixed') && cs.display !== 'none') top = header.getBoundingClientRect().height;
+      }
+      const h = window.visualViewport?.height ?? window.innerHeight;
+      root.style.setProperty('--holdem-fit-h', `${Math.round(h - top)}px`);
+      const bar = mainRef.current?.querySelector<HTMLElement>('[role="group"]');
+      root.style.setProperty('--holdem-bar-h', `${Math.round(bar?.getBoundingClientRect().height ?? 0) || 170}px`);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    window.addEventListener('orientationchange', measure);
+    const bar = mainRef.current?.querySelector<HTMLElement>('[role="group"]');
+    const ro = bar && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    if (bar) ro?.observe(bar);
+    return () => {
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('orientationchange', measure);
+      ro?.disconnect();
+    };
+  }, [touch, immersiveOn, inPlay, phoneLandscape]);
+
+  // When play starts or resumes on a phone, bring the table and the bar into view, the bar at the bottom edge.
+  useEffect(() => {
+    if (!touch || !running) return;
+    mainRef.current?.scrollIntoView?.({ block: 'end', behavior: 'smooth' });
+  }, [touch, running]);
 
   // ── Actions ─────────────────────────────────────────────────
   const start = useCallback((s: Setup) => {
@@ -321,10 +370,8 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
   }, [callouts, lang]);
   const keyRows = useMemo(() => KEYS.map(([keys, action]): [string, string] => [keys, tr(action)]), [tr]);
   const touchRows = useMemo(() => TOUCH_ROWS.map(([gesture, action]): [string, string] => [tr(gesture), tr(action)]), [tr]);
-  // What Finish would rank right now: the points of the player's current place among the players still in.
-  const finishScore = inTournament
-    ? tournamentScore({ difficulty: game.setup.difficulty, format: game.setup.format, place: standingPlace(t.players, PLAYER_ID) })
-    : 0;
+  // What Finish would rank right now: the points of the player's current place (0 before MIN_FINISH_HANDS hands).
+  const finishScore = inTournament ? finishScoreOf({ ...game.setup, table: t }, PLAYER_ID) : 0;
   const openProfile = openChar ? (game.bots.find((b) => b.id === openChar) ?? null) : null;
   const best = Math.max(stats.best, score);
   const newBest = score > 0 && score > stats.bestBeforeRun;
@@ -369,7 +416,11 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
     overlay = {
       title: game.finishedEarly ? k('finishedEarly') : won ? tr('wonTitle') : tr('finishedTitle', { ord: ordinal(place, lang), n: place }),
       message:
-        (game.finishedEarly ? `${tr('finishedEarlyRank', { ord: ordinal(place, lang) })} · ` : '') +
+        (game.finishedEarly
+          ? (completedHands(t) < MIN_FINISH_HANDS
+              ? tr('finishedEarlyTooSoon', { n: formatNumber(MIN_FINISH_HANDS, lang) })
+              : tr('finishedEarlyRank', { ord: ordinal(place, lang) })) + ' · '
+          : '') +
         (score > 0 ? tr('resultPoints', { points: formatChips(score, lang) }) : tr('resultNoPoints')) +
         tr('resultTail', { hands: formatNumber(t.handNo, lang), time: formatClock(seconds), best: formatChips(best, lang) }) +
         (newBest ? tr('newBestSuffix') : ''),
@@ -421,10 +472,11 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
       />
 
       <div className={styles.layout}>
-        <div className={styles.main}>
+        <div ref={mainRef} className={styles.main} data-phone-landscape={phoneLandscape}>
           <div className={`arc-game__board arc-board-tap ${styles.tableWrap}`}>
             <Table
               state={game}
+              orientation={phoneLandscape ? 'landscape' : undefined}
               theme={settings.table}
               deck={settings.deck}
               speed={settings.speed}

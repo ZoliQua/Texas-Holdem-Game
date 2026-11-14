@@ -76,11 +76,12 @@ Minden játék önálló repó, amely a portálba is beépül. Közös a dizájn
   lassú / normál / gyors tempó
 - 🧠 **Tisztességes gépek** – mindig csak egy `BotView`-t látnak (a nyilvános információt és a saját két lapjukat); egy teszt
   összekeveri mindenki más lapjait és a paklit, és ellenőrzi, hogy egyetlen döntés sem változik
-- 📱 **Telefonra kész** – álló képernyőn függőleges asztal, a napló számlálós fiókként, érintőképernyőn pedig hüvelykujjal elérhető
-  lenti sáv ujjnyi gombokkal, 44 px magas emeléscsúszkával és gyorsgombokkal
+- 📱 **Telefonra kész** – álló képernyőn függőleges asztal, a napló számlálós fiókként, érintőképernyőn pedig tömör lépéssáv közvetlenül
+  az asztal alatt (fekvő telefonon mellette) ujjnyi gombokkal, 44 px magas emeléscsúszkával és gyorsgombokkal; az asztal a képernyő
+  magasságához igazodik, így a lapjaid, az asztal közepe és a sáv egy képernyőn elfér
 - 📖 **Szabályok ablak** – cél, irányítás, szabályok, pontozás és kézrangsor példalapokkal; megnyitáskor a játék szünetel
-- 🏁 **Idő előtti befejezés** – szándékosan lezárhatod a versenyt, és a zsetonjaid szerinti jelenlegi helyezésed pontjai kerülnek
-  a ranglistára
+- 🏁 **Idő előtti befejezés** – szándékosan lezárhatod a versenyt; 10 lejátszott leosztás után a zsetonjaid szerinti jelenlegi
+  helyezésed pontjai kerülnek a ranglistára
 - ⛶ **Teljes képernyő** – az asztal az oldal nélkül (iPhone-on CSS-es teljes képernyős mód)
 - 💾 **Automatikus mentés és folytatás** – az egész verseny, akár leosztás közben is, túléli az újratöltést és a lap bezárását
 - 🌗 **Sötét / világos téma**, közös minden arcade-játékkal (**T** billentyű)
@@ -143,10 +144,12 @@ zárolva van, így dupla kattintás vagy dupla Enter sosem lép kétszer. A gyor
 lenyomva tartod a Cmd/Ctrl/Alt billentyűt. Az **R** az emelés csúszkájáé, ezért a **Szabályok** ablak a Verseny panel gombjával
 nyílik.
 
-**Telefonon:** a lépéseid az asztal alatti lenti sávban vannak, hüvelykujjnyi távolságra – koppints a **Dobás**, **Passz /
+**Telefonon:** a lépéseid közvetlenül az asztal alatti sávban vannak (fekvő telefonon mellette), hüvelykujjnyi távolságra; az
+asztal úgy méreteződik, hogy a lapjaid, az asztal közepe és a sáv egy képernyőn elférjen, osztáskor pedig az oldal odagörget –
+koppints a **Dobás**, **Passz /
 Megadás** vagy az emelés gombra, húzd a (44 px magas) csúszkát, vagy koppints egy gyorsgombra a tét beállításához; az emelés gombja
 megerősítés előtt mindig mutatja az összeget. Egy szereplőre koppintva megnyílik a kártyája. A **Szabályok**, **Befejezés** és
-**Teljes képernyő** gomb a Verseny panelen van. iPhone-on add hozzá az oldalt a főképernyőhöz, így böngészősávok nélkül látod.
+**Teljes képernyő** gomb a Verseny panelen van; teljes képernyőn a cím és a statisztikai mezők eltűnnek. iPhone-on add hozzá az oldalt a főképernyőhöz, így böngészősávok nélkül látod.
 
 ## 🎯 Pontozás és statisztika
 
@@ -169,9 +172,10 @@ score      = round(base × placeShare)          // max 5 000
 | 6. | 0 | 0 | 0 | — |
 
 **Idő előtti befejezés.** A **Befejezés** gomb azonnal lezárja az egész versenyt (egy megerősítés után, amely mutatja a pontokat).
-A még játékban lévők között a zsetonjaid alapján kapsz helyezést – a mostani leosztás előtti állás szerint, egyenlő zsetonnál a jobb
-helyet –, és pontosan annyi pontot kapsz, amennyit az a hely a fenti táblázat szerint ér; az eredménykártyán „Idő előtt befejezve”
-áll.
+Legalább **10 lejátszott leosztás** után (`MIN_FINISH_HANDS`) a még játékban lévők között a zsetonjaid alapján kapsz helyezést – ha
+leosztás közben fejezed be, mindenkinél a leosztás eleji zseton számít –, egyenlő zsetonnál a **rosszabb** hely jár, és pontosan annyi
+pontot kapsz, amennyit az a hely a fenti táblázat szerint ér. 10 lejátszott leosztás előtt a Befejezés **0** pontot ér, így az
+Osztás → Befejezés sosem hoz ingyen első helyet. Az eredménykártyán „Idő előtt befejezve” áll.
 
 Minden befejezett versenyt egyszer rögzít a kit az `arcade.stats.holdem` alatt (rekord, játszmák, győzelmek, idő); az eredmény első
 helynél `win`, a **Befejezés** gombbal lezárt versenynél `finished`, egyébként `loss`. Az **Új verseny** gombbal feladott verseny

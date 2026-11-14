@@ -76,10 +76,12 @@ Jedes Spiel ist ein eigenständiges Repo, das sich auch ins Portal einklinkt. Al
   Langsam / Normal / Schnell
 - 🧠 **Faire Bots** – sie sehen immer nur eine `BotView` (öffentliche Informationen plus ihre eigenen zwei Karten); ein Test vertauscht
   die Karten aller anderen und das Deck und prüft, dass sich keine Entscheidung ändert
-- 📱 **Handytauglich** – ein aufrechter Tisch im Hochformat, der Verlauf als Schublade mit Zähler und auf Touchscreens eine Leiste
-  unten in Daumenreichweite mit fingergroßen Knöpfen, einem 44 px hohen Erhöhen-Regler und Vorgaben
+- 📱 **Handytauglich** – ein aufrechter Tisch im Hochformat, der Verlauf als Schublade mit Zähler und auf Touchscreens eine kompakte
+  Aktionsleiste direkt unter dem Tisch (bei quer gehaltenem Handy daneben) mit fingergroßen Knöpfen, einem 44 px hohen
+  Erhöhen-Regler und Vorgaben; der Tisch passt sich der Bildschirmhöhe an, sodass deine Karten, das Board und die Leiste auf einen
+  Bildschirm passen
 - 📖 **Regeln-Dialog** – Ziel, Steuerung, Regeln, Punkte und eine Rangliste der Hände mit Beispielkarten; beim Öffnen pausiert das Spiel
-- 🏁 **Vorzeitig beenden** – beende das Turnier bewusst und lass die Punkte deines aktuellen Platzes nach Chips werten
+- 🏁 **Vorzeitig beenden** – beende das Turnier bewusst; nach 10 gespielten Händen zählen die Punkte deines aktuellen Platzes nach Chips
 - ⛶ **Vollbild** – der Tisch ohne die Seite drumherum (auf dem iPhone ein CSS-Vollbildmodus)
 - 💾 **Autospeichern & Fortsetzen** – das ganze Turnier übersteht, auch mitten in der Hand, Neuladen und geschlossene Tabs
 - 🌗 **Dunkles / helles Design**, geteilt mit allen Arcade-Spielen (Taste **T**)
@@ -143,10 +145,12 @@ ist sie gesperrt, sodass ein Doppelklick oder doppeltes Enter nie zweimal handel
 Feld tippst oder Cmd/Strg/Alt hältst. **R** gehört zum Erhöhen-Regler, deshalb öffnet sich der **Regeln**-Dialog über seinen Knopf im
 Turnier-Bereich.
 
-**Auf dem Handy:** Deine Aktionen liegen in der Leiste unten am Tisch, in Daumenreichweite – tippe auf **Passen**, **Checken /
+**Auf dem Handy:** Deine Aktionen liegen in der Leiste direkt unter dem Tisch (bei quer gehaltenem Handy daneben), in
+Daumenreichweite; der Tisch ist so bemessen, dass deine Karten, das Board und die Leiste auf einen Bildschirm passen, und beim
+Austeilen scrollt die Seite sie ins Bild – tippe auf **Passen**, **Checken /
 Mitgehen** oder den Erhöhen-Knopf, zieh den Regler (44 px hoch) oder tippe auf eine Vorgabe, um den Einsatz festzulegen; der
 Erhöhen-Knopf zeigt den Betrag immer, bevor du bestätigst. Tippe auf eine Figur für ihre Karte. Die Knöpfe **Regeln**, **Beenden**
-und **Vollbild** sind im Turnier-Bereich. Auf dem iPhone füge die Seite zum Home-Bildschirm hinzu, dann gibt es keine Browserleisten.
+und **Vollbild** sind im Turnier-Bereich; im Vollbild entfallen Titel und Statuskacheln. Auf dem iPhone füge die Seite zum Home-Bildschirm hinzu, dann gibt es keine Browserleisten.
 
 ## 🎯 Punkte & Statistik
 
@@ -168,9 +172,11 @@ score      = round(base × placeShare)          // max 5 000
 | 5. | 100 | 250 | 500 | — |
 | 6. | 0 | 0 | 0 | — |
 
-**Vorzeitig beenden.** Der Knopf **Beenden** schließt das ganze Turnier sofort ab (nach einer Rückfrage, die die Punkte zeigt). Du
-wirst unter den verbliebenen Spielern nach Chips platziert – Stacks so, wie sie vor der laufenden Hand standen; gleiche Stacks teilen
-sich den besseren Platz – und bekommst genau die Punkte, die dieser Platz oben bringt; die Ergebniskarte zeigt „Vorzeitig beendet“.
+**Vorzeitig beenden.** Der Knopf **Beenden** schließt das ganze Turnier sofort ab (nach einer Rückfrage, die die Punkte zeigt).
+Sobald mindestens **10 Hände** gespielt sind (`MIN_FINISH_HANDS`), wirst du unter den verbliebenen Spielern nach Chips platziert –
+beendest du mitten in einer Hand, zählt bei allen der Stack vom Beginn dieser Hand –, bei gleich vielen Chips gilt der **schlechtere**
+Platz, und du bekommst genau die Punkte, die dieser Platz oben bringt. Vor 10 gespielten Händen bringt Beenden **0** Punkte, also
+gibt es mit Austeilen → Beenden nie einen geschenkten ersten Platz. Die Ergebniskarte zeigt „Vorzeitig beendet“.
 
 Jedes beendete Turnier wird vom Kit einmal unter `arcade.stats.holdem` erfasst (Bestwert, Spiele, Siege, Zeit); das Ergebnis ist
 `win` für den ersten Platz, `finished` für ein mit **Beenden** abgeschlossenes Turnier und sonst `loss`. Ein über **Neues Turnier**

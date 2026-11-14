@@ -73,9 +73,9 @@ Every game is a standalone repo that also plugs into the portal. They share one 
 - 🎨 **Three tables** — Arcade neon (default), Classic casino, Elegant dark; **four-colour or grey deck**; Slow / Normal / Fast speed
 - 🧠 **Fair bots** — they only ever see a `BotView` (public information plus their own two cards); a test permutes everybody else's
   cards and the deck and checks that no decision changes
-- 📱 **Phone-ready** — an upright table on portrait screens, the log as a drawer with a badge, and on touch screens a thumb-reach bottom bar with finger-sized buttons, a 44 px raise slider and presets
+- 📱 **Phone-ready** — an upright table on portrait screens, the log as a drawer with a badge, and on touch screens a compact action bar right under the table (beside it on a phone held sideways) with finger-sized buttons, a 44 px raise slider and presets; the table shrinks to the screen height so your cards, the board and the bar fit on one screen
 - 📖 **Rules dialog** — goal, controls, rules, scoring and a hand-ranking ladder with example cards; opening it pauses the game
-- 🏁 **Finish early** — end the tournament on purpose and rank the points of your current place by chips
+- 🏁 **Finish early** — end the tournament on purpose; after 10 completed hands it ranks the points of your current place by chips
 - ⛶ **Full screen** — the table without the page around it (a CSS full-screen mode on iPhone)
 - 💾 **Autosave & resume** — the whole tournament, mid-hand, survives reloads and tab closes
 - 🌗 **Dark / light theme** shared with every arcade game (press **T**)
@@ -133,9 +133,11 @@ All-in**, and a confirm button that always shows the amount. It is locked while 
 Enter can never act twice. Hotkeys are ignored while you type in a field or hold Cmd/Ctrl/Alt. **R** belongs to the raise slider,
 so the **Rules** dialog opens with its button in the Tournament panel.
 
-**On a phone:** your actions sit in the bar at the bottom of the table, within thumb reach — tap **Fold**, **Check / Call** or the
+**On a phone:** your actions sit in the bar right under the table (beside it when you hold the phone sideways), within thumb
+reach; the table is sized so your cards, the board and the bar fit on one screen, and dealing scrolls them into view — tap **Fold**, **Check / Call** or the
 raise button, drag the slider (44 px tall) or tap a preset to size a bet; the raise button always shows the amount before you
-confirm. Tap a character for its card. The **Rules**, **Finish** and **Full screen** buttons are in the Tournament panel. On iPhone,
+confirm. Tap a character for its card. The **Rules**, **Finish** and **Full screen** buttons are in the Tournament panel; full screen leaves out the
+title and the stat tiles. On iPhone,
 add the page to the Home Screen for a view without browser bars.
 
 ## 🎯 Scoring & stats
@@ -158,9 +160,11 @@ score      = round(base × placeShare)          // max 5 000
 | 5th | 100 | 250 | 500 | — |
 | 6th | 0 | 0 | 0 | — |
 
-**Finish early.** The **Finish** button ends the whole tournament at once (after a confirm that shows the points). You are placed
-among the players still in by chips — stacks as they stood before the current hand, equal stacks sharing the better place — and get
-exactly the points that place would pay above; the result card says "Finished early".
+**Finish early.** The **Finish** button ends the whole tournament at once (after a confirm that shows the points). Once at least
+**10 hands** are completed (`MIN_FINISH_HANDS`), you are placed among the players still in by chips — if you finish in the middle of a
+hand, everybody's stack counts as it was at the start of that hand — equal stacks take the **worse** place, and you get exactly the
+points that place pays above. Before 10 completed hands, Finish ranks **0** points, so Deal → Finish never pays a free first place.
+The result card says "Finished early".
 
 Every finished tournament is recorded once by the kit under `arcade.stats.holdem` (Best, plays, wins, time); the outcome is `win`
 for first place, `finished` for a tournament ended with **Finish**, and `loss` otherwise. A tournament abandoned through

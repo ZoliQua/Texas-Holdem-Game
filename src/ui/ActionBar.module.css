@@ -119,30 +119,33 @@
   }
 }
 
-/* Touch (phones, tablets): the bar is the thumb-reach bottom bar with finger-sized controls. */
+/* Touch (phones, tablets): a compact bar under the table with finger-sized controls. It stays in the
+   flow (not sticky), so it never covers your own seat; the table above is capped so both fit on screen. */
 @media (pointer: coarse) {
   .bar {
-    position: sticky;
-    bottom: 0;
-    z-index: 5;
-    padding-bottom: calc(10px + env(safe-area-inset-bottom));
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    gap: 8px;
-    padding-top: 8px;
+    position: static;
+    gap: 6px;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    border-radius: var(--radius-lg);
     touch-action: manipulation;
   }
 
+  .main {
+    gap: 6px;
+  }
+
   .main > button {
-    min-height: 52px;
+    min-height: 48px;
+  }
+
+  .sizing {
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 
   /* The slider keeps its aria-label and the raise button shows the amount: the caption only costs height here. */
   .sliderLabel {
     display: none;
-  }
-
-  .sizing {
-    grid-template-columns: 1fr;
   }
 
   .slider input {
@@ -153,11 +156,27 @@
   .presets {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
   }
 
   .preset {
     min-height: 44px;
-    padding: 6px 2px;
+    padding: 4px 2px;
     justify-content: center;
+  }
+}
+
+/* A phone held sideways: the bar is a narrow column beside the table, the three actions stacked. */
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 560px) {
+  .main {
+    grid-template-columns: 1fr;
+  }
+
+  .main > button {
+    min-height: 44px;
+  }
+
+  .presets {
+    grid-template-columns: repeat(3, 1fr);
   }
 }

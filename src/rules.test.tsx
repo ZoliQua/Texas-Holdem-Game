@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { applyDental, applyLang, formatNumber, saveSession } from './arcade';
 import { evaluate7 } from './engine/evaluate';
 import { STARTING_STACK } from './engine/tournament';
-import { BASE_POINTS, MAX_SCORE, SIX_MAX_SHARES, tournamentScore } from './game/scoring';
+import { BASE_POINTS, MAX_SCORE, MIN_FINISH_HANDS, SIX_MAX_SHARES, tournamentScore } from './game/scoring';
 import { riggedSixMax } from './game/testkit';
 import { HoldemGame, SESSION_SCHEMA } from './HoldemGame';
 import { setCoarsePointer } from './test/touchEnv';
@@ -60,9 +60,9 @@ describe('Hold’em rules dialog', () => {
     expect(headings()).toEqual(['Cél', 'Így játssz', 'Szabályok', 'Pontozás', 'Fogas mód', 'Mobilon']);
     const text = rules().textContent ?? '';
     expect(text).not.toContain('F dob');
-    expect(text).toContain('koppints a lenti sávban a Dobás, Passz / Megadás vagy az emelés gombra');
+    expect(text).toContain('koppints az asztal alatti sávban a Dobás, Passz / Megadás vagy az emelés gombra');
     expect(text).toContain('Min., ½ kassza, ¾ kassza, Kassza, All-in');
-    expect(text).toContain('A lépéseid a lenti sávban vannak, hüvelykujjnyi távolságra.');
+    expect(text).toContain('A lépéseid az asztal alatti sávban vannak (fekvő telefonon mellette), hüvelykujjnyi távolságra; az asztal úgy kicsinyedik, hogy a lapjaid, az asztal közepe és a sáv egy képernyőn elférjen.');
     expect(text).toContain('Húzd az emelés csúszkáját');
     expect(text).toContain('A Teljes képernyő gomb elrejti a böngészőt az asztal körül.');
   });
@@ -93,7 +93,10 @@ describe('Hold’em rules dialog', () => {
     // Spot checks against the constants themselves (catches a formula drifting away from them).
     expect(text).toContain(`Nehéz, 6 fős asztal: 1. hely ${hu(BASE_POINTS.hard)}, 2. hely ${hu(BASE_POINTS.hard * SIX_MAX_SHARES[1])},`);
     expect(MAX_SCORE).toBe(Math.max(...(['easy', 'medium', 'hard'] as const).map((d) => tournamentScore({ difficulty: d, format: 'sixMax', place: 1 }))));
-    expect(text).toContain('A Befejezés azonnal lezárja a versenyt.');
+    const h = hu(MIN_FINISH_HANDS);
+    expect(text).toContain(
+      `A Befejezés azonnal lezárja a versenyt. Legalább ${h} lejátszott leosztás után a még játékban lévők között a zsetonjaid alapján kapsz helyezést – ha leosztás közben fejezed be, mindenkinél a leosztás eleji zseton számít –, egyenlő zsetonnál a rosszabb hely jár, és ennek a helynek a pontjai kerülnek a ranglistára. ${h} lejátszott leosztás előtt a Befejezés ${hu(0)} pontot ér.`,
+    );
   });
 
   it('the setup screen’s starting-stack hint uses the real starting stack', () => {
@@ -116,6 +119,7 @@ describe('Hold’em rules dialog', () => {
     expect(img.querySelectorAll('[data-kicker="true"]').length).toBeGreaterThan(0);
     expect(img.querySelectorAll('[data-kicker="true"] rect[stroke-dasharray]').length).toBe(img.querySelectorAll('[data-kicker="true"]').length);
     expect(img.querySelectorAll('[data-ladder-badge="tooth"]')).toHaveLength(0);
+    for (const r of img.querySelectorAll('[data-kicker="true"] rect')) expect(r.getAttribute('stroke-width')).toBe('1.2');
   });
 
   it('the ladder follows dental mode', () => {
