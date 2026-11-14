@@ -174,7 +174,8 @@ score      = round(base × placeShare)          // max 5 000
 
 **Vorzeitig beenden.** Der Knopf **Beenden** schließt das ganze Turnier sofort ab (nach einer Rückfrage, die die Punkte zeigt).
 Sobald mindestens **10 Hände** gespielt sind (`MIN_FINISH_HANDS`), wirst du unter den verbliebenen Spielern nach Chips platziert –
-beendest du mitten in einer Hand, zählt bei allen der Stack vom Beginn dieser Hand –, bei gleich vielen Chips gilt der **schlechtere**
+beendest du mitten in einer Hand, sind deine schon gesetzten Chips verloren, bei den anderen zählen ihre Einsätze weiter mit –,
+bei gleich vielen Chips gilt der **schlechtere**
 Platz, und du bekommst genau die Punkte, die dieser Platz oben bringt. Vor 10 gespielten Händen bringt Beenden **0** Punkte, also
 gibt es mit Austeilen → Beenden nie einen geschenkten ersten Platz. Die Ergebniskarte zeigt „Vorzeitig beendet“.
 

@@ -14,7 +14,7 @@
 
 .main {
   display: grid;
-  grid-template-columns: 1fr 1.2fr 1.5fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.5fr);
   gap: 8px;
 }
 
@@ -94,7 +94,7 @@
 
   .presets {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .preset {
@@ -134,6 +134,16 @@
     gap: 6px;
   }
 
+  /* Long labels (hu „Emelés 1 234-ig”, „½ kassza”) wrap inside their track instead of widening the bar. */
+  .main > button,
+  .preset {
+    min-width: 0;
+    white-space: normal;
+    line-height: 1.15;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
   .main > button {
     min-height: 48px;
   }
@@ -155,7 +165,7 @@
 
   .presets {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 6px;
   }
 
@@ -177,6 +187,6 @@
   }
 
   .presets {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

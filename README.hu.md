@@ -172,8 +172,8 @@ score      = round(base × placeShare)          // max 5 000
 | 6. | 0 | 0 | 0 | — |
 
 **Idő előtti befejezés.** A **Befejezés** gomb azonnal lezárja az egész versenyt (egy megerősítés után, amely mutatja a pontokat).
-Legalább **10 lejátszott leosztás** után (`MIN_FINISH_HANDS`) a még játékban lévők között a zsetonjaid alapján kapsz helyezést – ha
-leosztás közben fejezed be, mindenkinél a leosztás eleji zseton számít –, egyenlő zsetonnál a **rosszabb** hely jár, és pontosan annyi
+Legalább **10 lejátszott leosztás** után (`MIN_FINISH_HANDS`) a még játékban lévők között a zsetonjaid alapján kapsz helyezést – ha leosztás közben fejezed be,
+a már kasszába tett zsetonjaid elvesznek, a többieknél viszont beszámít, amit betettek –, egyenlő zsetonnál a **rosszabb** hely jár, és pontosan annyi
 pontot kapsz, amennyit az a hely a fenti táblázat szerint ér. 10 lejátszott leosztás előtt a Befejezés **0** pontot ér, így az
 Osztás → Befejezés sosem hoz ingyen első helyet. Az eredménykártyán „Idő előtt befejezve” áll.
 

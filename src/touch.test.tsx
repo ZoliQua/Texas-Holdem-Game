@@ -57,7 +57,11 @@ describe('Hold’em touch controls', () => {
     expect(coarse).toMatch(/\.slider input \{[^}]*min-height: 44px/);
     expect(coarse).toMatch(/\.preset \{[^}]*min-height: 44px/);
     // Presets in one row; the bar stays in the flow under the table (no sticky overlay on your seat).
-    expect(coarse).toMatch(/\.presets \{[^}]*grid-template-columns: repeat\(5, 1fr\)/);
+    expect(coarse).toMatch(/\.presets \{[^}]*grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/);
+    // 360–390 px phones: tracks may shrink below their content and long labels wrap, so the bar never widens the page.
+    expect(actionBarCss).toMatch(/\.main \{[^}]*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1\.2fr\) minmax\(0, 1\.5fr\)/);
+    expect(actionBarCss).not.toMatch(/repeat\(\d, 1fr\)/);
+    expect(coarse).toMatch(/\.main > button,\s*\.preset \{[^}]*min-width: 0;[^}]*white-space: normal;[^}]*line-height: 1\.15/);
     expect(coarse).toMatch(/\.bar \{[^}]*position: static/);
     expect(coarse).toMatch(/safe-area-inset-bottom/);
     // Landscape phones: a narrow column beside the table, buttons stacked.

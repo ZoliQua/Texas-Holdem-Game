@@ -161,8 +161,8 @@ score      = round(base × placeShare)          // max 5 000
 | 6th | 0 | 0 | 0 | — |
 
 **Finish early.** The **Finish** button ends the whole tournament at once (after a confirm that shows the points). Once at least
-**10 hands** are completed (`MIN_FINISH_HANDS`), you are placed among the players still in by chips — if you finish in the middle of a
-hand, everybody's stack counts as it was at the start of that hand — equal stacks take the **worse** place, and you get exactly the
+**10 hands** are completed (`MIN_FINISH_HANDS`), you are placed among the players still in by chips — if you finish in the middle of a hand, the chips you already put in the pot are lost,
+while the others' bets still count as theirs — equal stacks take the **worse** place, and you get exactly the
 points that place pays above. Before 10 completed hands, Finish ranks **0** points, so Deal → Finish never pays a free first place.
 The result card says "Finished early".
 

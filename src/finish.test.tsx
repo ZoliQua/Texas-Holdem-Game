@@ -42,7 +42,7 @@ function resume(stacks: number[], handsPlayed = MIN_FINISH_HANDS) {
 }
 
 describe('standingPlace', () => {
-  it('counts the players still in with at least as many chips (stack + chips already in the pot): ties take the worse place', () => {
+  it('counts the players still in with at least as many chips (the others count stack + chips already in the pot): ties take the worse place', () => {
     const s = riggedSixMax([1000, 2600, 2400, 800, 1100, 1100]);
     expect(standingPlace(s.table.players, PLAYER_ID)).toBe(5);
     expect(standingPlace(s.table.players, s.table.players[4].id)).toBe(4);
@@ -53,6 +53,30 @@ describe('standingPlace', () => {
     // Busted players are already placed below everybody still in.
     const out = s.table.players.map((p, i) => (i === 1 ? { ...p, stack: 0, committed: 0, out: true } : p));
     expect(standingPlace(out, PLAYER_ID)).toBe(4);
+  });
+
+  it('mid-hand, your own chips in the pot count as forfeited; the others keep theirs', () => {
+    // Before the hand the player leads with 2,000 → 1st.
+    const s = riggedSixMax([2000, 1700, 1400, 1300, 1300, 1300]);
+    expect(standingPlace(s.table.players, PLAYER_ID)).toBe(1);
+    // Seat 1 bets 1,000 and the player calls it: 1,000 behind, 1,000 in the pot.
+    const mid = s.table.players.map((p, i) =>
+      i === 0 ? { ...p, stack: 1000, committed: 1000 } : i === 1 ? { ...p, stack: 700, committed: 1000 } : p,
+    );
+    // Only the 1,000 behind counts for the player; seat 1 (700 behind) still counts 1,700 → everybody else is ahead: 6th.
+    expect(standingPlace(mid, PLAYER_ID)).toBe(6);
+  });
+
+  it('facing a big bet, Finish ranks lower than before the hand (no escape from a losing hand)', () => {
+    const s = riggedSixMax([2000, 1700, 1400, 1300, 1300, 1300], { handsPlayed: MIN_FINISH_HANDS });
+    expect(advance(s, { type: 'finish' })).toMatchObject({ playerPlace: 1 });
+    // The player shoves; mid-hand Finish no longer counts those chips as the player's.
+    let m = advance(s, { type: 'player', action: { kind: 'allIn' } });
+    if (m.pending !== null) m = advance(m, { type: 'settle', nonce: m.pending });
+    expect(m.table.players[0].committed).toBeGreaterThan(0);
+    const f = advance(m, { type: 'finish' });
+    expect(f.phase).toBe('finished');
+    expect(f.playerPlace).toBeGreaterThan(1);
   });
 
   it('a hand counts as completed once it is over', () => {

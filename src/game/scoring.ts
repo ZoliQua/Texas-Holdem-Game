@@ -26,14 +26,16 @@ export function completedHands(t: Pick<TableState, 'handNo' | 'street'>): number
 
 /**
  * The place `id` holds right now among the players still in: the number of them (`id` included) with at
- * least as many chips — stack + chips already put in this hand, i.e. the stacks as they stood at the start of
- * the current hand. Equal stacks take the worse place; busted players already rank below everybody still in.
+ * least as many chips. Mid-hand, `id`'s own chips already in the pot count as forfeited (only the stack
+ * behind counts), while everybody else counts stack + chips put in this hand — so Finish never escapes a
+ * losing hand. Between hands nothing is committed and these are just the stacks. Equal chips take the worse
+ * place; busted players already rank below everybody still in.
  */
 export function standingPlace(players: readonly PlayerState[], id: string): number {
-  const chips = (p: PlayerState) => p.stack + p.committed;
   const me = players.find((p) => p.id === id);
   if (!me) return players.length;
-  return players.filter((p) => !p.out && (p.id === id || chips(p) >= chips(me))).length;
+  const mine = me.stack;
+  return players.filter((p) => !p.out && (p.id === id || p.stack + p.committed >= mine)).length;
 }
 
 /** What Finish ranks right now: the standing place's points once MIN_FINISH_HANDS hands are completed, else 0. */

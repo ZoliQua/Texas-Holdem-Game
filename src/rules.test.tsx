@@ -95,7 +95,7 @@ describe('Hold’em rules dialog', () => {
     expect(MAX_SCORE).toBe(Math.max(...(['easy', 'medium', 'hard'] as const).map((d) => tournamentScore({ difficulty: d, format: 'sixMax', place: 1 }))));
     const h = hu(MIN_FINISH_HANDS);
     expect(text).toContain(
-      `A Befejezés azonnal lezárja a versenyt. Legalább ${h} lejátszott leosztás után a még játékban lévők között a zsetonjaid alapján kapsz helyezést – ha leosztás közben fejezed be, mindenkinél a leosztás eleji zseton számít –, egyenlő zsetonnál a rosszabb hely jár, és ennek a helynek a pontjai kerülnek a ranglistára. ${h} lejátszott leosztás előtt a Befejezés ${hu(0)} pontot ér.`,
+      `A Befejezés azonnal lezárja a versenyt. Legalább ${h} lejátszott leosztás után a még játékban lévők között a zsetonjaid alapján kapsz helyezést – ha leosztás közben fejezed be, a már kasszába tett zsetonjaid elvesznek, a többieknél viszont beszámít, amit betettek –, egyenlő zsetonnál a rosszabb hely jár, és ennek a helynek a pontjai kerülnek a ranglistára. ${h} lejátszott leosztás előtt a Befejezés ${hu(0)} pontot ér.`,
     );
   });
 
