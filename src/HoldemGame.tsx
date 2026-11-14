@@ -90,6 +90,13 @@ const TOUCH_ROWS: [MessageKey, MessageKey][] = [
   ['touchSeat', 'touchSeatAction'],
 ];
 
+/**
+ * Sticky page headers that cover the top of the screen on a phone, so the table is capped below them:
+ * `.arc-topbar` is the standalone page's top bar (kit shell), `.header` the Arcade-Game-Center portal's
+ * header (packages/ui/src/portal.css, 56 px, sticky top 0). Both are hidden in full screen.
+ */
+const STICKY_HEADERS = '.arc-topbar, .header';
+
 const newSeed = () => (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
 
 export function HoldemGame(props: ArcadeGameProps = {}) {
@@ -245,11 +252,15 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
     const root = rootRef.current;
     if (!touch || !root) return;
     const measure = () => {
+      // The lowest bottom edge of a visible sticky / fixed page header; full screen has none.
       let top = 0;
-      const header = immersiveOn ? null : document.querySelector('.arc-topbar');
-      if (header) {
-        const cs = window.getComputedStyle(header);
-        if ((cs.position === 'sticky' || cs.position === 'fixed') && cs.display !== 'none') top = header.getBoundingClientRect().height;
+      if (!immersiveOn) {
+        for (const header of document.querySelectorAll(STICKY_HEADERS)) {
+          const cs = window.getComputedStyle(header);
+          if ((cs.position === 'sticky' || cs.position === 'fixed') && cs.display !== 'none' && cs.visibility !== 'hidden') {
+            top = Math.max(top, header.getBoundingClientRect().bottom);
+          }
+        }
       }
       const h = window.visualViewport?.height ?? window.innerHeight;
       root.style.setProperty('--holdem-fit-h', `${Math.round(h - top)}px`);
@@ -259,12 +270,16 @@ export function HoldemGame(props: ArcadeGameProps = {}) {
     measure();
     window.addEventListener('resize', measure);
     window.addEventListener('orientationchange', measure);
+    window.visualViewport?.addEventListener('resize', measure);
+    document.addEventListener('fullscreenchange', measure);
     const bar = mainRef.current?.querySelector<HTMLElement>('[role="group"]');
     const ro = bar && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
     if (bar) ro?.observe(bar);
     return () => {
       window.removeEventListener('resize', measure);
       window.removeEventListener('orientationchange', measure);
+      window.visualViewport?.removeEventListener('resize', measure);
+      document.removeEventListener('fullscreenchange', measure);
       ro?.disconnect();
     };
   }, [touch, immersiveOn, inPlay, phoneLandscape]);

@@ -87,6 +87,31 @@ describe('Hold’em touch controls', () => {
     expect(scroll.mock.contexts.at(-1)).toBe(container.querySelector('[data-phone-landscape]'));
   });
 
+  it('subtracts the portal’s sticky header (.header) and the standalone top bar from the height left for the table', () => {
+    const fakeHeader = (cls: string, bottom: number) => {
+      const el = document.createElement('header');
+      el.className = cls;
+      el.style.position = 'sticky';
+      el.getBoundingClientRect = () => ({ top: 0, bottom, height: bottom, left: 0, right: 390, width: 390, x: 0, y: 0, toJSON: () => ({}) });
+      document.body.prepend(el);
+      return el;
+    };
+    const portal = fakeHeader('header', 56);
+    const { container, unmount } = render(<HoldemGame />);
+    const root = () => container.querySelector('.arc-game') as HTMLElement;
+    expect(root().style.getPropertyValue('--holdem-fit-h')).toBe(`${window.innerHeight - 56}px`);
+    // A taller header further down wins (the lowest bottom edge counts); a hidden one does not.
+    const top = fakeHeader('arc-topbar', 89);
+    act(() => void window.dispatchEvent(new Event('resize')));
+    expect(root().style.getPropertyValue('--holdem-fit-h')).toBe(`${window.innerHeight - 89}px`);
+    top.style.display = 'none';
+    act(() => void window.dispatchEvent(new Event('resize')));
+    expect(root().style.getPropertyValue('--holdem-fit-h')).toBe(`${window.innerHeight - 56}px`);
+    unmount();
+    portal.remove();
+    top.remove();
+  });
+
   it('a landscape phone puts the table and the bar side by side, the table in its wide shape', () => {
     setCoarsePointer(true, { landscape: true });
     const { container } = resume();
