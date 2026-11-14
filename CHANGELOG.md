@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-11-14
+
+### Added
+
+- Rules dialog (goal, controls, rules, scoring, dental mode, and on touch devices a mobile section) with a hand-ranking ladder: the ten hands from royal flush to high card with example cards, the cards that make the hand in solid frames and kickers dashed and lower. Opening it pauses the tournament. It opens with its button only, because **R** focuses the raise slider.
+- Finish early: ends the whole tournament on purpose and ranks the points of your current place among the players still in, by chips as they stood before the current hand (equal stacks share the better place) — the same points the tournament formula pays for that place. The result card says "Finished early"; the outcome is `finished`.
+- Touch controls: on touch screens the action bar is a thumb-reach bottom bar with 52 px action buttons, a 44 px raise slider and 44 px presets, without key hints; the table is a tap-only board; touch help replaces the key list. Fits 360 px portrait phones without horizontal scrolling.
+- Full-screen button (CSS full-screen mode on iPhone); `viewport-fit=cover` for the notch.
+- README in English, German and Hungarian; the family table lists all fifteen games, including Snapszer.
+
+### Changed
+
+- The setup screen's starting-stack hint reads the real starting stack constant.
+
 ## [1.1.1] — 2026-11-14
 
 ### Changed

@@ -1,7 +1,7 @@
 {
   "name": "texas-holdem-game",
   "private": true,
-  "version": "1.1.1",
+  "version": "1.2.0",
   "type": "module",
   "description": "No-limit Texas Hold'em tournaments in React + Vite + TypeScript — heads-up or 6-max sit & go against 15 original cartoon bots with their own styles, strengths and visible tells; animated SVG table in three themes, colour-blind-friendly four-colour or grey deck, full action log, autosave & resume, shared Zoltan’s Arcade stats. Part of Arcade-Game-Center.",
   "license": "MIT",

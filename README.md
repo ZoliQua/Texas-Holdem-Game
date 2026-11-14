@@ -1,9 +1,11 @@
 # 🃏 Texas Hold'em
 
+**English** · [Deutsch](README.de.md) · [Magyar](README.hu.md)
+
 No-limit Texas Hold'em tournaments built with **React 18**, **Vite** and **TypeScript** — a heads-up or 6-max sit & go against
 **15 original cartoon bots**, each with a face, a playing style, a strength and a couple of visible tells. An animated SVG table in
 three themes, a colour-blind-friendly deck, call-outs for every action and a full hand log keep a 20–60 minute session easy to follow.
-Runs on its own **and** as one of the fourteen games of **[Zoltan's Arcade](https://github.com/ZoliQua/Arcade-Game-Center)** —
+Runs on its own **and** as one of the fifteen games of **[Zoltan's Arcade](https://github.com/ZoliQua/Arcade-Game-Center)** —
 play it at [dulzoltan.hu/arcade/#/play/holdem](https://dulzoltan.hu/arcade/#/play/holdem).
 
 [![CI](https://github.com/ZoliQua/Texas-Holdem-Game/actions/workflows/ci.yml/badge.svg)](https://github.com/ZoliQua/Texas-Holdem-Game/actions/workflows/ci.yml)
@@ -55,6 +57,7 @@ Every game is a standalone repo that also plugs into the portal. They share one 
 | 💣 Minesweeper | [Minesweeper-Game](https://github.com/ZoliQua/Minesweeper-Game) | Logic |
 | ♠️ Solitaire | [Solitaire-Game](https://github.com/ZoliQua/Solitaire-Game) | Cards |
 | 🎴 Ulti | [Ulti-Game](https://github.com/ZoliQua/Ulti-Game) | Cards |
+| 🂡 Snapszer | [Snapszer-Game](https://github.com/ZoliQua/Snapszer-Game) | Cards |
 
 ## ✨ Features
 
@@ -70,7 +73,10 @@ Every game is a standalone repo that also plugs into the portal. They share one 
 - 🎨 **Three tables** — Arcade neon (default), Classic casino, Elegant dark; **four-colour or grey deck**; Slow / Normal / Fast speed
 - 🧠 **Fair bots** — they only ever see a `BotView` (public information plus their own two cards); a test permutes everybody else's
   cards and the deck and checks that no decision changes
-- 📱 **Phone-ready** — an upright table on portrait screens, the log as a drawer with a badge, the action bar pinned to the bottom
+- 📱 **Phone-ready** — an upright table on portrait screens, the log as a drawer with a badge, and on touch screens a thumb-reach bottom bar with finger-sized buttons, a 44 px raise slider and presets
+- 📖 **Rules dialog** — goal, controls, rules, scoring and a hand-ranking ladder with example cards; opening it pauses the game
+- 🏁 **Finish early** — end the tournament on purpose and rank the points of your current place by chips
+- ⛶ **Full screen** — the table without the page around it (a CSS full-screen mode on iPhone)
 - 💾 **Autosave & resume** — the whole tournament, mid-hand, survives reloads and tab closes
 - 🌗 **Dark / light theme** shared with every arcade game (press **T**)
 - 🌍 **Three languages** — English, Hungarian and German; switch in the top bar or in the settings (also `?lang=en|hu|de` for link hand-off); numbers follow the locale's grouping
@@ -104,7 +110,7 @@ Standard no-limit hold'em tournament rules:
 - Side pots are built for every all-in level; an odd chip in a split pot goes to the first winner left of the button.
 - At showdown the last aggressor shows first. Bots always show, so the log stays informative.
 - Players busted in the same hand are ranked by their stack at the start of that hand (equal stacks share the place).
-- Your run ends when you bust or win — the bots do not have to play it out.
+- Your run ends when you bust or win — the bots do not have to play it out — or when you press **Finish**.
 
 **Hands per level** come from `src/engine/schedule.json` (see [Simulation scripts](#-simulation-scripts)). The stat strip always shows
 the blinds, the next level and how many hands remain until it.
@@ -124,7 +130,13 @@ the blinds, the next level and how many hands remain until it.
 
 The action bar has **Fold**, **Check / Call n**, a **slider** from the minimum raise to all-in, presets **Min · ½ pot · ¾ pot · Pot ·
 All-in**, and a confirm button that always shows the amount. It is locked while an action animates, so a double click or a double
-Enter can never act twice. Hotkeys are ignored while you type in a field or hold Cmd/Ctrl/Alt.
+Enter can never act twice. Hotkeys are ignored while you type in a field or hold Cmd/Ctrl/Alt. **R** belongs to the raise slider,
+so the **Rules** dialog opens with its button in the Tournament panel.
+
+**On a phone:** your actions sit in the bar at the bottom of the table, within thumb reach — tap **Fold**, **Check / Call** or the
+raise button, drag the slider (44 px tall) or tap a preset to size a bet; the raise button always shows the amount before you
+confirm. Tap a character for its card. The **Rules**, **Finish** and **Full screen** buttons are in the Tournament panel. On iPhone,
+add the page to the Home Screen for a view without browser bars.
 
 ## 🎯 Scoring & stats
 
@@ -146,8 +158,13 @@ score      = round(base × placeShare)          // max 5 000
 | 5th | 100 | 250 | 500 | — |
 | 6th | 0 | 0 | 0 | — |
 
+**Finish early.** The **Finish** button ends the whole tournament at once (after a confirm that shows the points). You are placed
+among the players still in by chips — stacks as they stood before the current hand, equal stacks sharing the better place — and get
+exactly the points that place would pay above; the result card says "Finished early".
+
 Every finished tournament is recorded once by the kit under `arcade.stats.holdem` (Best, plays, wins, time); the outcome is `win`
-for first place and `loss` otherwise. A tournament abandoned through **New tournament** is not recorded.
+for first place, `finished` for a tournament ended with **Finish**, and `loss` otherwise. A tournament abandoned through
+**New tournament** is not recorded.
 
 ## 🦊 The characters
 
@@ -197,7 +214,7 @@ import { HoldemGame, HoldemDemo } from '@arcade/holdem';
 
 <HoldemGame
   embedded                                       // hide the page title; the portal shows it
-  onGameOver={(score) => submitScore('holdem', score)}  // finished runs with points > 0
+  onGameOver={(score) => submitScore('holdem', score)}  // finished runs with points > 0, and every Finish
   onRunEnd={(run) => console.log(run.outcome, run.score)}
   onStatusChange={({ status, seconds }) => updateHeader(status, seconds)}
 />
@@ -257,11 +274,12 @@ src/
     tournament.ts blinds.ts schedule.ts(+json) stats.ts
   bots/                   view.ts (BotView), profiles.ts (roster), preflop.ts, equity.ts, strength.ts,
                           decide.ts, tells.ts, simulate.ts
-  game/                   state.ts (advance), scoring.ts, persist.ts (guard), useBotTurns.ts, speed.ts
+  game/                   state.ts (advance), scoring.ts (+ standingPlace), persist.ts (guard), useBotTurns.ts, speed.ts
   ui/                     Table, Seat, CardView, Character, Chips, ActionBar, LogPanel, CharacterCard,
-                          SetupScreen, SettingsPanel, themes, layout, useSettings
+                          SetupScreen, SettingsPanel, themes, layout, useSettings, handLadder
   hooks/useHoldemKeys.ts
   demo/HoldemDemo.tsx     landing-page attract mode
+  rules.tsx               Rules dialog sections + HandLadderDiagram
   HoldemGame.tsx          the embeddable game (ArcadeGameProps)
   App.tsx main.tsx index.ts
 scripts/                  sim-strength.ts, calibrate-blinds.ts (vite-node)
